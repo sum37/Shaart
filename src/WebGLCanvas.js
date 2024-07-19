@@ -34,7 +34,7 @@ const WebGLCanvas = () => {
     const drawDashedCircle = useCallback((gl, programInfo, buffers, center, radius) => {
         const numSegments = 100;
         const dashLength = 0.02;
-        const gapLength = 0.01;
+        const gapLength = 0.02;
         const positions = [];
 
         for (let i = 0; i <= numSegments; i++) {
@@ -42,9 +42,6 @@ const WebGLCanvas = () => {
             if (i % 2 === 0) {
                 positions.push(center.x + radius * Math.cos(angle));
                 positions.push(center.y + radius * Math.sin(angle));
-            } else {
-                positions.push(center.x + (radius + gapLength) * Math.cos(angle));
-                positions.push(center.y + (radius + gapLength) * Math.sin(angle));
             }
         }
 
@@ -59,12 +56,12 @@ const WebGLCanvas = () => {
         gl.drawArrays(gl.LINES, 0, vertexCount);
     }, []);
 
-    const drawCircle = useCallback((gl, programInfo, buffers, center, radius) => {
+    const drawCircle = useCallback((gl, programInfo, buffers, center, radius, endAngle = 2 * Math.PI) => {
         const numSegments = 100;
         const positions = [];
 
         for (let i = 0; i <= numSegments; i++) {
-            const angle = i * 2 * Math.PI / numSegments;
+            const angle = i * endAngle / numSegments;
             positions.push(center.x + radius * Math.cos(angle));
             positions.push(center.y + radius * Math.sin(angle));
         }
@@ -77,12 +74,40 @@ const WebGLCanvas = () => {
         gl.vertexAttribPointer(programInfo.attribLocations.vertexPosition, 2, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
         const vertexCount = positions.length / 2;
-        gl.drawArrays(gl.LINE_LOOP, 0, vertexCount);
+        gl.drawArrays(gl.LINE_STRIP, 0, vertexCount);
     }, []);
 
+    const animateCircle = useCallback((gl, programInfo, buffers, center, radius) => {
+        let startAngle = 0;
+        const endAngle = 2 * Math.PI;
+        const animationDuration = 1000; // 1 second
+        const startTime = performance.now();
+
+        const render = (currentTime) => {
+            const elapsedTime = currentTime - startTime;
+            const currentAngle = Math.min(startAngle + (elapsedTime / animationDuration) * endAngle, endAngle);
+
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            circles.forEach(({ center, radius }) => {
+                drawCircle(gl, programInfo, buffers, center, radius);
+            });
+            drawCircle(gl, programInfo, buffers, center, radius, currentAngle);
+
+            if (currentAngle < endAngle) {
+                requestAnimationFrame(render);
+            }
+        };
+
+        requestAnimationFrame(render);
+    }, [drawCircle, circles]);
+
     const drawFinalCircle = useCallback(() => {
+        const gl = glRef.current;
+        const programInfo = programInfoRef.current;
+        const buffers = buffersRef.current;
         setCircles((prevCircles) => [...prevCircles, { center, radius }]);
-    }, [center, radius]);
+        animateCircle(gl, programInfo, buffers, center, radius);
+    }, [center, radius, animateCircle]);
 
     const handleMouseDown = useCallback((e) => {
         const rect = canvasRef.current.getBoundingClientRect();
@@ -104,6 +129,7 @@ const WebGLCanvas = () => {
 
     const handleMouseUp = useCallback(() => {
         if (isDrawing) {
+            setRadius(0);
             setIsDrawing(false);
             drawFinalCircle();
         }
@@ -111,7 +137,6 @@ const WebGLCanvas = () => {
 
     const handleMouseOut = useCallback(() => {
         if (isDrawing) {
-            setIsDrawing(false);
             drawFinalCircle();
         }
     }, [isDrawing, drawFinalCircle]);
