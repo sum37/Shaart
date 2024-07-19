@@ -1,15 +1,99 @@
-import { useEffect } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 
 const WebGLCanvas = () => {
+    const [isDrawing, setIsDrawing] = useState(false);
+    const [center, setCenter] = useState({ x: 0, y: 0 });
+    const [radius, setRadius] = useState(0);
+    const canvasRef = useRef(null);
+    const glRef = useRef(null);
+    const programInfoRef = useRef(null);
+    const buffersRef = useRef(null);
+
+    const resizeCanvasToDisplaySize = (canvas) => {
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+        if (canvas.width !== width || canvas.height !== height) {
+            canvas.width = width;
+            canvas.height = height;
+        }
+    };
+
+    const initBuffers = useCallback((gl) => {
+        const positionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([]), gl.STATIC_DRAW);
+        return { position: positionBuffer };
+    }, []);
+
+    const drawScene = useCallback((gl, programInfo, buffers, center, radius) => {
+        const numSegments = 100;
+        const positions = [];
+        for (let i = 0; i <= numSegments; i++) {
+            const angle = i * 2 * Math.PI / numSegments;
+            positions.push(center.x + radius * Math.cos(angle));
+            positions.push(center.y + radius * Math.sin(angle));
+        }
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.useProgram(programInfo.program);
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
+        gl.vertexAttribPointer(programInfo.attribLocations.vertexPosition, 2, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
+        const vertexCount = positions.length / 2;
+        gl.drawArrays(gl.TRIANGLE_FAN, 0, vertexCount);
+    }, []);
+
+    const drawFinalCircle = useCallback(() => {
+        const gl = glRef.current;
+        const programInfo = programInfoRef.current;
+        const buffers = buffersRef.current;
+        drawScene(gl, programInfo, buffers, center, radius);
+    }, [center, radius, drawScene]);
+
+    const handleMouseDown = useCallback((e) => {
+        const rect = canvasRef.current.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width * 2 - 1;
+        const y = (e.clientY - rect.top) / rect.height * -2 + 1;
+        setCenter({ x, y });
+        setIsDrawing(true);
+    }, []);
+
+    const handleMouseMove = useCallback((e) => {
+        if (!isDrawing) return;
+        const rect = canvasRef.current.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width * 2 - 1;
+        const y = (e.clientY - rect.top) / rect.height * -2 + 1;
+        const dx = x - center.x;
+        const dy = y - center.y;
+        setRadius(Math.sqrt(dx * dx + dy * dy));
+    }, [isDrawing, center]);
+
+    const handleMouseUp = useCallback(() => {
+        if (isDrawing) {
+            setIsDrawing(false);
+            drawFinalCircle();
+        }
+    }, [isDrawing, drawFinalCircle]);
+
+    const handleMouseOut = useCallback(() => {
+        if (isDrawing) {
+            setIsDrawing(false);
+            drawFinalCircle();
+        }
+    }, [isDrawing, drawFinalCircle]);
+
     useEffect(() => {
-        const canvas = document.getElementById("glcanvas");
+        const canvas = canvasRef.current;
         const gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
         if (!gl) {
             alert("Unable to initialize WebGL.");
             return;
         }
 
-        // Initialize shaders
+        glRef.current = gl;
+
         const initShaderProgram = (gl, vsSource, fsSource) => {
             const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
             const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
@@ -36,31 +120,6 @@ const WebGLCanvas = () => {
             return shader;
         };
 
-        const initBuffers = (gl) => {
-            const positionBuffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-            const positions = [];
-            const numSegments = 100;
-            const radius = 0.5;
-            for (let i = 0; i <= numSegments; i++) {
-                const angle = i * 2 * Math.PI / numSegments;
-                positions.push(radius * Math.cos(angle));
-                positions.push(radius * Math.sin(angle));
-            }
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-            return { position: positionBuffer };
-        };
-
-        const drawScene = (gl, programInfo, buffers) => {
-            gl.clear(gl.COLOR_BUFFER_BIT);
-            gl.useProgram(programInfo.program);
-            gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
-            gl.vertexAttribPointer(programInfo.attribLocations.vertexPosition, 2, gl.FLOAT, false, 0, 0);
-            gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
-            const vertexCount = 101;
-            gl.drawArrays(gl.TRIANGLE_FAN, 0, vertexCount);
-        };
-
         const vsSource = `
             attribute vec2 aVertexPosition;
             void main(void) {
@@ -70,7 +129,7 @@ const WebGLCanvas = () => {
 
         const fsSource = `
             void main(void) {
-                gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+                gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
             }
         `;
 
@@ -81,11 +140,50 @@ const WebGLCanvas = () => {
                 vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
             },
         };
-        const buffers = initBuffers(gl);
-        drawScene(gl, programInfo, buffers);
-    }, []);
 
-    return <canvas id="glcanvas" width="640" height="480">Your browser doesn't support HTML5 canvas.</canvas>;
+        programInfoRef.current = programInfo;
+
+        gl.clearColor(1.0, 1.0, 1.0, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        const buffers = initBuffers(gl);
+        buffersRef.current = buffers;
+
+        const handleResize = () => {
+            resizeCanvasToDisplaySize(canvas);
+            gl.viewport(0, 0, canvas.width, canvas.height);
+            if (!isDrawing) {
+                gl.clear(gl.COLOR_BUFFER_BIT);
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+        handleResize();
+
+        canvas.addEventListener("mousedown", handleMouseDown);
+        canvas.addEventListener("mousemove", handleMouseMove);
+        canvas.addEventListener("mouseup", handleMouseUp);
+        canvas.addEventListener("mouseout", handleMouseOut);
+
+        return () => {
+            window.removeEventListener('resize', handleResize);
+            canvas.removeEventListener("mousedown", handleMouseDown);
+            canvas.removeEventListener("mousemove", handleMouseMove);
+            canvas.removeEventListener("mouseup", handleMouseUp);
+            canvas.removeEventListener("mouseout", handleMouseOut);
+        };
+    }, [initBuffers, handleMouseDown, handleMouseMove, handleMouseUp, handleMouseOut, isDrawing]);
+
+    useEffect(() => {
+        if (isDrawing) {
+            const gl = glRef.current;
+            const programInfo = programInfoRef.current;
+            const buffers = buffersRef.current;
+            drawScene(gl, programInfo, buffers, center, radius);
+        }
+    }, [radius, isDrawing, center, drawScene]);
+
+    return <canvas id="glcanvas" ref={canvasRef} style={{ width: '100%', height: '100%' }}>Your browser doesn't support HTML5 canvas.</canvas>;
 };
 
 export default WebGLCanvas;
