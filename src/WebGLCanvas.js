@@ -1,22 +1,28 @@
 import { useEffect, useState, useRef, useCallback } from "react";
+import './WebGLCanvas.css'; // CSS 파일을 불러옴
 
 const WebGLCanvas = () => {
     const [isDrawing, setIsDrawing] = useState(false);
     const [center, setCenter] = useState({ x: 0, y: 0 });
     const [radius, setRadius] = useState(0);
+    const [canvasWidth, setCanvasWidth] = useState(0);
+    const [canvasHeight, setCanvasHeight] = useState(0);
     const canvasRef = useRef(null);
     const glRef = useRef(null);
     const programInfoRef = useRef(null);
     const buffersRef = useRef(null);
 
-    const resizeCanvasToDisplaySize = (canvas) => {
+    // 브라우저의 크기로 canvas 크기 설정
+    const resizeCanvasToDisplaySize = useCallback((canvas) => {
         const width = canvas.clientWidth;
         const height = canvas.clientHeight;
         if (canvas.width !== width || canvas.height !== height) {
             canvas.width = width;
             canvas.height = height;
+            setCanvasWidth(width);
+            setCanvasHeight(height);
         }
-    };
+    }, []);
 
     const initBuffers = useCallback((gl) => {
         const positionBuffer = gl.createBuffer();
@@ -54,21 +60,21 @@ const WebGLCanvas = () => {
 
     const handleMouseDown = useCallback((e) => {
         const rect = canvasRef.current.getBoundingClientRect();
-        const x = (e.clientX - rect.left) / rect.width * 2 - 1;
-        const y = (e.clientY - rect.top) / rect.height * -2 + 1;
+        const x = (e.clientX - rect.left) / canvasWidth * 2 - 1;
+        const y = (e.clientY - rect.top) / canvasHeight * -2 + 1;
         setCenter({ x, y });
         setIsDrawing(true);
-    }, []);
+    }, [canvasWidth, canvasHeight]);
 
     const handleMouseMove = useCallback((e) => {
         if (!isDrawing) return;
         const rect = canvasRef.current.getBoundingClientRect();
-        const x = (e.clientX - rect.left) / rect.width * 2 - 1;
-        const y = (e.clientY - rect.top) / rect.height * -2 + 1;
+        const x = (e.clientX - rect.left) / canvasWidth * 2 - 1;
+        const y = (e.clientY - rect.top) / canvasHeight * -2 + 1;
         const dx = x - center.x;
         const dy = y - center.y;
         setRadius(Math.sqrt(dx * dx + dy * dy));
-    }, [isDrawing, center]);
+    }, [isDrawing, center, canvasWidth, canvasHeight]);
 
     const handleMouseUp = useCallback(() => {
         if (isDrawing) {
@@ -91,7 +97,6 @@ const WebGLCanvas = () => {
             alert("Unable to initialize WebGL.");
             return;
         }
-
         glRef.current = gl;
 
         const initShaderProgram = (gl, vsSource, fsSource) => {
@@ -121,17 +126,17 @@ const WebGLCanvas = () => {
         };
 
         const vsSource = `
-            attribute vec2 aVertexPosition;
-            void main(void) {
-                gl_Position = vec4(aVertexPosition, 0.0, 1.0);
-            }
-        `;
+        attribute vec2 aVertexPosition;
+        void main(void) {
+            gl_Position = vec4(aVertexPosition, 0.0, 1.0);
+        }
+    `;
 
-        const fsSource = `
-            void main(void) {
-                gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-            }
-        `;
+    const fsSource = `
+        void main(void) {
+            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        }
+    `;
 
         const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
         const programInfo = {
@@ -172,7 +177,7 @@ const WebGLCanvas = () => {
             canvas.removeEventListener("mouseup", handleMouseUp);
             canvas.removeEventListener("mouseout", handleMouseOut);
         };
-    }, [initBuffers, handleMouseDown, handleMouseMove, handleMouseUp, handleMouseOut, isDrawing]);
+    }, [initBuffers, handleMouseDown, handleMouseMove, handleMouseUp, handleMouseOut, isDrawing, resizeCanvasToDisplaySize]);
 
     useEffect(() => {
         if (isDrawing) {

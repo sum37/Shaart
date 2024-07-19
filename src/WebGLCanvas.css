@@ -1,0 +1,9 @@
+#glcanvas {
+    display: block; /* 스크롤바 방지 */
+    position: absolute; /* 화면 전체를 차지하도록 절대 위치 설정 */
+    top: 0;
+    left: 0;
+    width: 100vw; /* 뷰포트 너비의 100% */
+    height: 100vh; /* 뷰포트 높이의 100% */
+    aspect-ratio: 16 / 9; /* 원하는 비율 설정 */
+}
