@@ -68,16 +68,37 @@ document.addEventListener("DOMContentLoaded", () => {
         gl.enableVertexAttribArray(positionLocation);
         gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
-        gl.clear(gl.COLOR_BUFFER_BIT);
+        // gl.clear(gl.COLOR_BUFFER_BIT);
         gl.drawArrays(gl.POINTS, 0, points.length / 2);
     }
+
+
+    // 선을 그리는 함수
+    function drawLine(points) {
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(points), gl.STATIC_DRAW);
+
+        gl.enableVertexAttribArray(positionLocation);
+        gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+        // gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.drawArrays(gl.LINES, 0, points.length / 2);
+    }
+
+
+
+
+    let line_points = [];
 
     const points = [];
     canvas.addEventListener("click", (event) => {
         const x = (event.clientX / canvas.width) * 2 - 1;
         const y = (event.clientY / canvas.height) * -2 + 1;
+        line_points.push(x, y);
         points.push(x, y);
+        
         drawPoints(points);
+        drawLine(line_points)
+        
     });
 
     // Set the background color to white
