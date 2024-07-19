@@ -5,6 +5,7 @@ const WebGLCanvas = () => {
     const [isDrawing, setIsDrawing] = useState(false);
     const [center, setCenter] = useState({ x: 0, y: 0 });
     const [radius, setRadius] = useState(0);
+    const [circles, setCircles] = useState([]);
     const [canvasWidth, setCanvasWidth] = useState(0);
     const [canvasHeight, setCanvasHeight] = useState(0);
     const canvasRef = useRef(null);
@@ -12,7 +13,6 @@ const WebGLCanvas = () => {
     const programInfoRef = useRef(null);
     const buffersRef = useRef(null);
 
-    // 브라우저의 크기로 canvas 크기 설정
     const resizeCanvasToDisplaySize = useCallback((canvas) => {
         const width = canvas.clientWidth;
         const height = canvas.clientHeight;
@@ -31,32 +31,58 @@ const WebGLCanvas = () => {
         return { position: positionBuffer };
     }, []);
 
-    const drawScene = useCallback((gl, programInfo, buffers, center, radius) => {
+    const drawDashedCircle = useCallback((gl, programInfo, buffers, center, radius) => {
         const numSegments = 100;
+        const dashLength = 0.02;
+        const gapLength = 0.01;
         const positions = [];
+
         for (let i = 0; i <= numSegments; i++) {
             const angle = i * 2 * Math.PI / numSegments;
-            positions.push(center.x + radius * Math.cos(angle));
-            positions.push(center.y + radius * Math.sin(angle));
+            if (i % 2 === 0) {
+                positions.push(center.x + radius * Math.cos(angle));
+                positions.push(center.y + radius * Math.sin(angle));
+            } else {
+                positions.push(center.x + (radius + gapLength) * Math.cos(angle));
+                positions.push(center.y + (radius + gapLength) * Math.sin(angle));
+            }
         }
+
         gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
-        gl.clear(gl.COLOR_BUFFER_BIT);
         gl.useProgram(programInfo.program);
         gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
         gl.vertexAttribPointer(programInfo.attribLocations.vertexPosition, 2, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
         const vertexCount = positions.length / 2;
-        gl.drawArrays(gl.TRIANGLE_FAN, 0, vertexCount);
+        gl.drawArrays(gl.LINES, 0, vertexCount);
+    }, []);
+
+    const drawCircle = useCallback((gl, programInfo, buffers, center, radius) => {
+        const numSegments = 100;
+        const positions = [];
+
+        for (let i = 0; i <= numSegments; i++) {
+            const angle = i * 2 * Math.PI / numSegments;
+            positions.push(center.x + radius * Math.cos(angle));
+            positions.push(center.y + radius * Math.sin(angle));
+        }
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+        gl.useProgram(programInfo.program);
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
+        gl.vertexAttribPointer(programInfo.attribLocations.vertexPosition, 2, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
+        const vertexCount = positions.length / 2;
+        gl.drawArrays(gl.LINE_LOOP, 0, vertexCount);
     }, []);
 
     const drawFinalCircle = useCallback(() => {
-        const gl = glRef.current;
-        const programInfo = programInfoRef.current;
-        const buffers = buffersRef.current;
-        drawScene(gl, programInfo, buffers, center, radius);
-    }, [center, radius, drawScene]);
+        setCircles((prevCircles) => [...prevCircles, { center, radius }]);
+    }, [center, radius]);
 
     const handleMouseDown = useCallback((e) => {
         const rect = canvasRef.current.getBoundingClientRect();
@@ -132,7 +158,7 @@ const WebGLCanvas = () => {
         }
     `;
 
-    const fsSource = `
+        const fsSource = `
         void main(void) {
             gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
         }
@@ -157,9 +183,10 @@ const WebGLCanvas = () => {
         const handleResize = () => {
             resizeCanvasToDisplaySize(canvas);
             gl.viewport(0, 0, canvas.width, canvas.height);
-            if (!isDrawing) {
-                gl.clear(gl.COLOR_BUFFER_BIT);
-            }
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            circles.forEach(({ center, radius }) => {
+                drawCircle(gl, programInfoRef.current, buffersRef.current, center, radius);
+            });
         };
 
         window.addEventListener('resize', handleResize);
@@ -177,16 +204,20 @@ const WebGLCanvas = () => {
             canvas.removeEventListener("mouseup", handleMouseUp);
             canvas.removeEventListener("mouseout", handleMouseOut);
         };
-    }, [initBuffers, handleMouseDown, handleMouseMove, handleMouseUp, handleMouseOut, isDrawing, resizeCanvasToDisplaySize]);
+    }, [initBuffers, handleMouseDown, handleMouseMove, handleMouseUp, handleMouseOut, resizeCanvasToDisplaySize, circles, drawCircle]);
 
     useEffect(() => {
+        const gl = glRef.current;
+        const programInfo = programInfoRef.current;
+        const buffers = buffersRef.current;
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        circles.forEach(({ center, radius }) => {
+            drawCircle(gl, programInfo, buffers, center, radius);
+        });
         if (isDrawing) {
-            const gl = glRef.current;
-            const programInfo = programInfoRef.current;
-            const buffers = buffersRef.current;
-            drawScene(gl, programInfo, buffers, center, radius);
+            drawDashedCircle(gl, programInfo, buffers, center, radius);
         }
-    }, [radius, isDrawing, center, drawScene]);
+    }, [isDrawing, center, radius, circles, drawCircle, drawDashedCircle]);
 
     return <canvas id="glcanvas" ref={canvasRef} style={{ width: '100%', height: '100%' }}>Your browser doesn't support HTML5 canvas.</canvas>;
 };
