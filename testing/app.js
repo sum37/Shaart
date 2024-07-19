@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const vertexShaderSource = `
         attribute vec2 a_position;
         void main() {
-            gl_PointSize = 10.0;
+            gl_PointSize = 15.0;
             gl_Position = vec4(a_position, 0, 1);
         }
     `;
@@ -74,7 +74,7 @@ document.addEventListener("DOMContentLoaded", () => {
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
     function drawPoints(points) {
-        gl.uniform4f(colorLocation, 0, 0, 0, 1); // Black color for points
+        gl.uniform4f(colorLocation, 1, 0, 0, 1); // Black color for points
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(points), gl.STATIC_DRAW);
         gl.enableVertexAttribArray(positionLocation);
         gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
@@ -120,7 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function animateLine() {
         let progress = 0;
-        const steps = 100;
+        const steps = 50;
         const x0 = currentLine[0];
         const y0 = currentLine[1];
         const x1 = currentLine[2];
@@ -133,9 +133,10 @@ document.addEventListener("DOMContentLoaded", () => {
             const y = y0 + t * (y1 - y0);
 
             gl.clear(gl.COLOR_BUFFER_BIT);
-            drawPoints(points);
+            
             drawLine(lines, [0, 0, 0, 1]); // Black color for existing lines
             drawLine([x0, y0, x, y], [0, 0, 0, 1]); // Black color for animated line
+            drawPoints(points);
 
             if (progress < steps) {
                 requestAnimationFrame(step);
@@ -144,8 +145,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 currentLine = [];
                 isAnimating = false;
                 gl.clear(gl.COLOR_BUFFER_BIT);
-                drawPoints(points);
                 drawLine(lines, [0, 0, 0, 1]); // Black color for existing lines
+                drawPoints(points);
+                
             }
         }
 
@@ -184,8 +186,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         gl.clear(gl.COLOR_BUFFER_BIT);
-        drawPoints(points);
         drawLine(lines, [0, 0, 0, 1]); // Black color for existing lines
+        drawPoints(points);
+        
 
         if (hoverPoint && points.length % 4 === 2) {
             drawDashedLine(points[points.length - 2], points[points.length - 1], hoverPoint[0], hoverPoint[1], [0, 0, 1, 1]); // Blue dashed line
@@ -220,8 +223,9 @@ document.addEventListener("DOMContentLoaded", () => {
             canvas.style.cursor = "default";
         } else {
             gl.clear(gl.COLOR_BUFFER_BIT);
-            drawPoints(points);
             drawLine(lines, [0, 0, 0, 1]); // Black color for existing lines
+            drawPoints(points);
+            
 
         }
     });

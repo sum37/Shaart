@@ -1,12 +1,12 @@
-import './App.css';
-import WebGLCanvas  from './WebGLCanvas';
+import React from 'react';
+import WebGLCanvas from './WebGLCanvas';
 
-function App() {
+const App = () => {
   return (
-      <div className="App">
-          <WebGLCanvas />
-      </div>
+    <div style={{ width: '100vw', height: '100vh' }}>
+      <WebGLCanvas />
+    </div>
   );
-}
+};
 
 export default App;
