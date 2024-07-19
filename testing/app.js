@@ -65,6 +65,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const positionLocation = gl.getAttribLocation(program, "a_position");
     const colorLocation = gl.getUniformLocation(program, "u_color");
     const positionBuffer = gl.createBuffer();
+
+
+    let isNearPoint = false;
+
+
+
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
     function drawPoints(points) {
@@ -103,13 +109,14 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         drawLine(dashPoints, color);
+        
     }
 
     let points = [];
     let lines = [];
     let currentLine = [];
     let isAnimating = false;
-    let hoverPoint = null;
+    const magneticRadius = 0.05; // Radius for magnetic effect
 
     function animateLine() {
         let progress = 0;
@@ -143,46 +150,82 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         requestAnimationFrame(step);
+        isNearPoint = false;
     }
 
     canvas.addEventListener("mousemove", (event) => {
-        if (points.length%4 === 0) return;
+        // if (points.length % 4 === 0) return;
 
         const rect = canvas.getBoundingClientRect();
-        const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-        const y = ((event.clientY - rect.top) / rect.height) * -2 + 1;
+        let x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        let y = ((event.clientY - rect.top) / rect.height) * -2 + 1;
+
+        isNearPoint = false;
+        // Apply magnetic effect
+        for (let i = 0; i < points.length; i += 2) {
+            
+            const px = points[i];
+            const py = points[i + 1];
+            const distance = Math.sqrt((x - px) ** 2 + (y - py) ** 2);
+            if (distance < magneticRadius) {
+                x = px;
+                y = py;
+                isNearPoint = true;
+                break;
+            }
+        }
+
         hoverPoint = [x, y];
+
+        if (isNearPoint) {
+            canvas.style.cursor = "pointer"; // Change cursor to pointer when near a point
+        } else {
+            canvas.style.cursor = "default"; // Change cursor back to default
+        }
 
         gl.clear(gl.COLOR_BUFFER_BIT);
         drawPoints(points);
         drawLine(lines, [0, 0, 0, 1]); // Black color for existing lines
 
-        if (hoverPoint ) {
+        if (hoverPoint && points.length % 4 === 2) {
             drawDashedLine(points[points.length - 2], points[points.length - 1], hoverPoint[0], hoverPoint[1], [0, 0, 1, 1]); // Blue dashed line
         }
     });
-
 
     canvas.addEventListener("click", (event) => {
         if (isAnimating) return;
 
         const rect = canvas.getBoundingClientRect();
-        const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-        const y = ((event.clientY - rect.top) / rect.height) * -2 + 1;
+        let x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        let y = ((event.clientY - rect.top) / rect.height) * -2 + 1;
+
+        // Apply magnetic effect
+        for (let i = 0; i < points.length; i += 2) {
+            const px = points[i];
+            const py = points[i + 1];
+            const distance = Math.sqrt((x - px) ** 2 + (y - py) ** 2);
+            if (distance < magneticRadius) {
+                x = px;
+                y = py;
+                break;
+            }
+        }
+
         points.push(x, y);
 
         if (points.length % 4 === 0) {
             currentLine = points.slice(-4);
             isAnimating = true;
             animateLine();
+            canvas.style.cursor = "default";
         } else {
             gl.clear(gl.COLOR_BUFFER_BIT);
             drawPoints(points);
             drawLine(lines, [0, 0, 0, 1]); // Black color for existing lines
+
         }
     });
 
-    
     gl.clearColor(1, 1, 1, 1);
     gl.clear(gl.COLOR_BUFFER_BIT);
 });
