@@ -7,26 +7,31 @@ import { BiSolidEraser } from "react-icons/bi";
 
 const App = () => {
   const [isEraserMode, setEraserMode] = useState(false);
+  const [isCircleMode, setCircleMode] = useState(false);
 
   const handleClick = (action) => {
     if (action === 'Eraser') {
       setEraserMode((prevMode) => !prevMode);
+      setCircleMode(false); // Turn off circle mode
+    } else if (action === 'Circle') {
+      setCircleMode((prevMode) => !prevMode);
+      setEraserMode(false); // Turn off eraser mode
     } else {
       alert(`Button ${action} clicked!`);
     }
   };
 
-  return (
+
+return (
     <div className="App">
-      <WebGLCanvas isEraserMode={isEraserMode} />
+      <WebGLCanvas isEraserMode={isEraserMode} isCircleMode={isCircleMode} />
       <div className="floating-toolbar">
         <button onClick={() => handleClick('Home')}><LineIcon /></button>
-        <button onClick={() => handleClick('Search')}><CircleIcon /></button>
+        <button onClick={() => handleClick('Circle')}><CircleIcon /></button>
         <button onClick={() => handleClick('Eraser')}><BiSolidEraser /></button>
       </div>
     </div>
   );
 };
-
 
 export default App;
