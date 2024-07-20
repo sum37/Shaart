@@ -318,13 +318,27 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
 
         if (!lineRemoved) {
           // Eraser mode: remove the nearest point if clicked near it
+          let pointRemoved = false;
           for (let i = 0; i < pointsRef.current.length; i += 2) {
             const px = pointsRef.current[i];
             const py = pointsRef.current[i + 1];
             const distance = Math.sqrt((x - px) ** 2 + (y - py) ** 2);
             if (distance < magneticRadius) {
               pointsRef.current.splice(i, 2);
+              pointRemoved = true;
               break;
+            }
+          }
+
+          if (!pointRemoved) {
+            // Eraser mode: remove the nearest circle if clicked near it
+            for (let i = 0; i < circlesRef.current.length; i++) {
+              const [cx, cy, radius] = circlesRef.current[i];
+              const distance = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
+              if (distance < radius + magneticRadius) {
+                circlesRef.current.splice(i, 1);
+                break;
+              }
             }
           }
         }
