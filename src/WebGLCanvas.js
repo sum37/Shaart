@@ -5,9 +5,12 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
   const pointsRef = useRef([]); // Store points' coordinates
   const linesRef = useRef([]); // Store lines' coordinates as arrays of start and end points
   const circlesRef = useRef([]); // Store circles' center coordinates and radius
+  const intersectionsRef = useRef([]); // Store intersection points
   const currentLineRef = useRef([]);
   const currentCircleRef = useRef([]);
   const isAnimatingRef = useRef(false);
+
+  const magneticRadius = 0.02;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -19,12 +22,13 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
     }
 
     const resizeCanvas = () => {
-      canvas.style.width = `${window.innerWidth}px`;
-      canvas.style.height = `${window.innerHeight}px`;
+      const size = Math.max(window.innerWidth, window.innerHeight);
+      canvas.style.width = `${size}px`;
+      canvas.style.height = `${size}px`;
 
       const devicePixelRatio = window.devicePixelRatio || 1;
-      canvas.width = window.innerWidth * devicePixelRatio;
-      canvas.height = window.innerHeight * devicePixelRatio;
+      canvas.width = size * devicePixelRatio;
+      canvas.height = size * devicePixelRatio;
       gl.viewport(0, 0, canvas.width, canvas.height);
     };
 
@@ -33,10 +37,11 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
       drawLine(linesRef.current, [0, 0, 0, 1]); // Redraw existing lines
       drawPoints(pointsRef.current); // Redraw points
       drawCircles(circlesRef.current, [0, 0, 0, 1]); // Redraw circles
+      drawPoints(intersectionsRef.current, [0, 1, 1, 1]); // Draw intersections in mint color
     };
 
-    const drawPoints = (points) => {
-      gl.uniform4f(colorLocation, 1, 0, 0, 1); // Red color for points
+    const drawPoints = (points, color = [1, 0, 0, 1]) => {
+      gl.uniform4f(colorLocation, color[0], color[1], color[2], color[3]); // Set color for points
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(points), gl.STATIC_DRAW);
       gl.enableVertexAttribArray(positionLocation);
       gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
@@ -53,7 +58,6 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
 
     const drawCircles = (circles, color) => {
       gl.uniform4f(colorLocation, color[0], color[1], color[2], color[3]); // Set color
-      const aspect = canvas.width / canvas.height; // Screen aspect ratio
       for (const circle of circles) {
         const [cx, cy, radius] = circle;
         const segments = 100;
@@ -61,7 +65,7 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
         const circlePoints = [];
         for (let i = 0; i <= segments; i++) {
           const angle = i * angleStep;
-          const x = cx + radius * Math.cos(angle) / aspect; // Apply horizontal aspect ratio
+          const x = cx + radius * Math.cos(angle);
           const y = cy + radius * Math.sin(angle);
           circlePoints.push(x, y);
         }
@@ -81,7 +85,7 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
         progress++;
         const t = progress / segments;
         const angle = t * 2 * Math.PI;
-        const x = cx + radius * Math.cos(angle) / (canvas.width / canvas.height);
+        const x = cx + radius * Math.cos(angle);
         const y = cy + radius * Math.sin(angle);
 
         gl.clear(gl.COLOR_BUFFER_BIT);
@@ -89,15 +93,17 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
         drawLine(linesRef.current, [0, 0, 0, 1]); // Black color for existing lines
         drawPoints(pointsRef.current);
         drawCircles(circlesRef.current, [0, 0, 0, 1]); // Redraw circles
+        drawPoints(intersectionsRef.current, [0, 1, 1, 1]); // Redraw intersections
 
         const circlePoints = [];
         for (let i = 0; i <= progress; i++) {
           const angle = i * angleStep;
-          const x = cx + radius * Math.cos(angle) / (canvas.width / canvas.height);
+          const x = cx + radius * Math.cos(angle);
           const y = cy + radius * Math.sin(angle);
           circlePoints.push(x, y);
         }
 
+        gl.uniform4f(colorLocation, 0, 0, 0, 1); // Set color to black for the circle being animated
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(circlePoints), gl.STATIC_DRAW);
         gl.enableVertexAttribArray(positionLocation);
         gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
@@ -108,11 +114,124 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
         } else {
           circlesRef.current.push([cx, cy, radius]);
           isAnimatingRef.current = false;
+          findIntersections();
           drawScene();
         }
       };
 
       requestAnimationFrame(step);
+    };
+
+    const findIntersections = () => {
+      intersectionsRef.current = [];
+
+      // Check intersections between lines
+      for (let i = 0; i < linesRef.current.length; i += 4) {
+        for (let j = i + 4; j < linesRef.current.length; j += 4) {
+          const [x1, y1, x2, y2] = linesRef.current.slice(i, i + 4);
+          const [x3, y3, x4, y4] = linesRef.current.slice(j, j + 4);
+          const intersection = getLineIntersection(x1, y1, x2, y2, x3, y3, x4, y4);
+          if (intersection) {
+            intersectionsRef.current.push(intersection[0], intersection[1]);
+          }
+        }
+      }
+
+      // Check intersections between lines and circles
+      for (let i = 0; i < linesRef.current.length; i += 4) {
+        const [x1, y1, x2, y2] = linesRef.current.slice(i, i + 4);
+        for (const [cx, cy, radius] of circlesRef.current) {
+          const intersections = getLineCircleIntersections(x1, y1, x2, y2, cx, cy, radius);
+          if (intersections) {
+            intersectionsRef.current.push(...intersections);
+          }
+        }
+      }
+
+      // Check intersections between circles
+      for (let i = 0; i < circlesRef.current.length; i++) {
+        for (let j = i + 1; j < circlesRef.current.length; j++) {
+          const [cx1, cy1, r1] = circlesRef.current[i];
+          const [cx2, cy2, r2] = circlesRef.current[j];
+          const intersections = getCircleCircleIntersections(cx1, cy1, r1, cx2, cy2, r2);
+          if (intersections) {
+            intersectionsRef.current.push(...intersections);
+          }
+        }
+      }
+    };
+
+    const getLineIntersection = (x1, y1, x2, y2, x3, y3, x4, y4) => {
+      const denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+      if (denom === 0) return null;
+
+      const intersectX = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / denom;
+      const intersectY = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / denom;
+
+      if (isPointOnLineSegment(x1, y1, x2, y2, intersectX, intersectY) && isPointOnLineSegment(x3, y3, x4, y4, intersectX, intersectY)) {
+        return [intersectX, intersectY];
+      }
+
+      return null;
+    };
+
+    const isPointOnLineSegment = (x1, y1, x2, y2, px, py) => {
+      const minX = Math.min(x1, x2);
+      const maxX = Math.max(x1, x2);
+      const minY = Math.min(y1, y2);
+      const maxY = Math.max(y1, y2);
+      return px >= minX && px <= maxX && py >= minY && py <= maxY;
+    };
+
+    const getLineCircleIntersections = (x1, y1, x2, y2, cx, cy, radius) => {
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const fx = x1 - cx;
+      const fy = y1 - cy;
+
+      const a = dx * dx + dy * dy;
+      const b = 2 * (fx * dx + fy * dy);
+      const c = (fx * fx + fy * fy) - radius * radius;
+
+      const discriminant = b * b - 4 * a * c;
+      if (discriminant < 0) return null;
+
+      const sqrtDiscriminant = Math.sqrt(discriminant);
+      const t1 = (-b - sqrtDiscriminant) / (2 * a);
+      const t2 = (-b + sqrtDiscriminant) / (2 * a);
+
+      const intersections = [];
+
+      if (t1 >= 0 && t1 <= 1) {
+        intersections.push(x1 + t1 * dx, y1 + t1 * dy);
+      }
+
+      if (t2 >= 0 && t2 <= 1) {
+        intersections.push(x1 + t2 * dx, y1 + t2 * dy);
+      }
+
+      return intersections.length > 0 ? intersections : null;
+    };
+
+    const getCircleCircleIntersections = (cx1, cy1, r1, cx2, cy2, r2) => {
+      const dx = cx2 - cx1;
+      const dy = cy2 - cy1;
+      const d = Math.sqrt(dx * dx + dy * dy);
+
+      // Check for no intersection or coincident circles
+      if (d > r1 + r2 || d < Math.abs(r1 - r2) || d === 0) return null;
+
+      const a = (r1 * r1 - r2 * r2 + d * d) / (2 * d);
+      const h = Math.sqrt(r1 * r1 - a * a);
+      const xm = cx1 + (dx * a) / d;
+      const ym = cy1 + (dy * a) / d;
+
+      const xs1 = xm + (h * dy) / d;
+      const ys1 = ym - (h * dx) / d;
+      const xs2 = xm - (h * dy) / d;
+      const ys2 = ym + (h * dx) / d;
+
+      return [xs1, ys1, xs2, ys2];
     };
 
     resizeCanvas();
@@ -124,7 +243,7 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
     const vertexShaderSource = `
       attribute vec2 a_position;
       void main() {
-          gl_PointSize = 15.0;
+          gl_PointSize = 10.0;
           gl_Position = vec4(a_position, 0, 1);
       }
     `;
@@ -133,10 +252,6 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
       precision mediump float;
       uniform vec4 u_color;
       void main() {
-          vec2 coord = gl_PointCoord - vec2(0.5);
-          if (length(coord) > 0.5) {
-              discard;
-          }
           gl_FragColor = u_color;
       }
     `;
@@ -172,8 +287,6 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
     const colorLocation = gl.getUniformLocation(program, 'u_color');
     const positionBuffer = gl.createBuffer();
 
-    const magneticRadius = 0.05;
-
     let isNearPoint = false;
 
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
@@ -201,16 +314,15 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
     };
 
     const drawDashedCircle = (cx, cy, radius, color, segments = 100, dashLength = 0.02, gapLength = 0.02) => {
-      const aspect = canvas.width / canvas.height;
       const angleStep = (Math.PI * 2) / segments;
       let dashPoints = [];
 
       for (let i = 0; i < segments; i++) {
         const angleStart = i * angleStep;
         const angleEnd = angleStart + angleStep * (dashLength / (dashLength + gapLength));
-        const xStart = cx + radius * Math.cos(angleStart) / aspect;
+        const xStart = cx + radius * Math.cos(angleStart);
         const yStart = cy + radius * Math.sin(angleStart);
-        const xEnd = cx + radius * Math.cos(angleEnd) / aspect;
+        const xEnd = cx + radius * Math.cos(angleEnd);
         const yEnd = cy + radius * Math.sin(angleEnd);
 
         dashPoints.push(xStart, yStart, xEnd, yEnd);
@@ -240,16 +352,47 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
         drawPoints(pointsRef.current);
         drawCircles(circlesRef.current, [0, 0, 0, 1]); // Redraw circles
 
+        const tempLines = [...linesRef.current, x0, y0, x, y];
+        const tempIntersections = [];
+        for (let i = 0; i < tempLines.length; i += 4) {
+          for (let j = i + 4; j < tempLines.length; j += 4) {
+            const [x1, y1, x2, y2] = tempLines.slice(i, i + 4);
+            const [x3, y3, x4, y4] = tempLines.slice(j, j + 4);
+            const intersection = getLineIntersection(x1, y1, x2, y2, x3, y3, x4, y4);
+            if (intersection) {
+              tempIntersections.push(intersection[0], intersection[1]);
+            }
+          }
+        }
+        for (let i = 0; i < tempLines.length; i += 4) {
+          const [x1, y1, x2, y2] = tempLines.slice(i, i + 4);
+          for (const [cx, cy, radius] of circlesRef.current) {
+            const intersections = getLineCircleIntersections(x1, y1, x2, y2, cx, cy, radius);
+            if (intersections) {
+              tempIntersections.push(...intersections);
+            }
+          }
+        }
+        for (let i = 0; i < circlesRef.current.length; i++) {
+          for (let j = i + 1; j < circlesRef.current.length; j++) {
+            const [cx1, cy1, r1] = circlesRef.current[i];
+            const [cx2, cy2, r2] = circlesRef.current[j];
+            const intersections = getCircleCircleIntersections(cx1, cy1, r1, cx2, cy2, r2);
+            if (intersections) {
+              tempIntersections.push(...intersections);
+            }
+          }
+        }
+        drawPoints(tempIntersections, [0, 1, 1, 1]); // Mint color for intersections
+
         if (progress < steps) {
           requestAnimationFrame(step);
         } else {
           linesRef.current.push(...currentLineRef.current);
           currentLineRef.current = [];
           isAnimatingRef.current = false;
-          gl.clear(gl.COLOR_BUFFER_BIT);
-          drawLine(linesRef.current, [0, 0, 0, 1]); // Black color for existing lines
-          drawPoints(pointsRef.current);
-          drawCircles(circlesRef.current, [0, 0, 0, 1]); // Redraw circles
+          findIntersections();
+          drawScene();
         }
       };
 
@@ -258,34 +401,75 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
     };
 
     const handleMouseMove = (event) => {
-      if (isEraserMode) return;
-
       const rect = canvas.getBoundingClientRect();
       let x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       let y = ((event.clientY - rect.top) / rect.height) * -2 + 1;
 
       isNearPoint = false;
+      let closestPoint = null;
+      let closestLine = null;
+      let closestCircle = null;
 
-      for (let i = 0; i < pointsRef.current.length; i += 2) {
-        const px = pointsRef.current[i];
-        const py = pointsRef.current[i + 1];
-        const distance = Math.sqrt((x - px) ** 2 + (y - py) ** 2);
-        if (distance < magneticRadius) {
-          x = px;
-          y = py;
-          isNearPoint = true;
-          break;
+      if (!isEraserMode) {
+        const allPoints = [...pointsRef.current, ...intersectionsRef.current]; // Include intersections in points check
+        for (let i = 0; i < allPoints.length; i += 2) {
+          const px = allPoints[i];
+          const py = allPoints[i + 1];
+          const distance = Math.sqrt((x - px) ** 2 + (y - py) ** 2);
+          if (distance < magneticRadius) {
+            x = px;
+            y = py;
+            isNearPoint = true;
+            closestPoint = [x, y];
+            break;
+          }
+        }
+      } else {
+        // Eraser mode: find the nearest line or circle
+        for (let i = 0; i < linesRef.current.length; i += 4) {
+          const x0 = linesRef.current[i];
+          const y0 = linesRef.current[i + 1];
+          const x1 = linesRef.current[i + 2];
+          const y1 = linesRef.current[i + 3];
+          if (isPointNearLineSegment(x, y, x0, y0, x1, y1, magneticRadius)) {
+            closestLine = [x0, y0, x1, y1];
+            break;
+          }
+        }
+
+        if (!closestLine) {
+          for (let i = 0; i < circlesRef.current.length; i++) {
+            const [cx, cy, radius] = circlesRef.current[i];
+            const distance = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
+            if (distance < radius + magneticRadius) {
+              closestCircle = [cx, cy, radius];
+              break;
+            }
+          }
         }
       }
 
       let hoverPoint = [x, y];
 
-      canvas.style.cursor = isNearPoint ? 'pointer' : 'default';
+      canvas.style.cursor = isNearPoint || closestLine || closestCircle ? 'pointer' : 'default';
 
       gl.clear(gl.COLOR_BUFFER_BIT);
       drawLine(linesRef.current, [0, 0, 0, 1]); // Black color for existing lines
       drawPoints(pointsRef.current);
       drawCircles(circlesRef.current, [0, 0, 0, 1]); // Redraw circles
+      drawPoints(intersectionsRef.current, [0, 1, 1, 1]); // Redraw intersections
+
+      if (closestPoint) {
+        drawPoints([closestPoint[0], closestPoint[1]], [1, 0.5, 0, 1]); // Orange color for the closest point
+      }
+
+      if (closestLine) {
+        drawLine(closestLine, [0, 1, 0, 1]); // Green color for the nearest line
+      }
+
+      if (closestCircle) {
+        drawCircles([closestCircle], [0, 1, 0, 1]); // Green color for the nearest circle
+      }
 
       if (isCircleMode && currentCircleRef.current.length === 2) {
         const [cx, cy] = currentCircleRef.current;
@@ -300,6 +484,18 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
       const rect = canvas.getBoundingClientRect();
       let x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       let y = ((event.clientY - rect.top) / rect.height) * -2 + 1;
+
+      const allPoints = [...pointsRef.current, ...intersectionsRef.current]; // Include intersections in points check
+      for (let i = 0; i < allPoints.length; i += 2) {
+        const px = allPoints[i];
+        const py = allPoints[i + 1];
+        const distance = Math.sqrt((x - px) ** 2 + (y - py) ** 2);
+        if (distance < magneticRadius) {
+          x = px;
+          y = py;
+          break;
+        }
+      }
 
       if (isEraserMode) {
         // Eraser mode: remove the nearest line if clicked near it
@@ -352,17 +548,6 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
           animateCircle(cx, cy, radius);
         }
       } else {
-        for (let i = 0; i < pointsRef.current.length; i += 2) {
-          const px = pointsRef.current[i];
-          const py = pointsRef.current[i + 1];
-          const distance = Math.sqrt((x - px) ** 2 + (y - py) ** 2);
-          if (distance < magneticRadius) {
-            x = px;
-            y = py;
-            break;
-          }
-        }
-
         pointsRef.current.push(x, y);
 
         if (pointsRef.current.length % 4 === 0) {
@@ -395,7 +580,7 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
     canvas.addEventListener('mousemove', handleMouseMove);
     canvas.addEventListener('click', handleClick);
 
-    gl.clearColor(1, 1, 1, 1);
+    gl.clearColor(1, 1, 1, 1); // White background
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     drawScene();
@@ -407,7 +592,7 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
     };
   }, [isEraserMode, isCircleMode]);
 
-  return <canvas ref={canvasRef} style={{ display: 'block', width: '100vw', height: '100vh' }} />;
+  return <canvas ref={canvasRef} style={{ display: 'block' }} />;
 };
 
 export default WebGLCanvas;
