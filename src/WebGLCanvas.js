@@ -1,10 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 
-const WebGLCanvas = ({ isEraserMode }) => {
+const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
   const canvasRef = useRef(null);
-  const pointsRef = useRef([]);
-  const linesRef = useRef([]);
+  const pointsRef = useRef([]); // 점들의 좌표 저장
+  const linesRef = useRef([]); // 선들의 좌표 저장, 시작점과 끝점 배열로 저장 
+  const circlesRef = useRef([]); // 원들의 중심 좌표 저장, 반지름 저장
   const currentLineRef = useRef([]);
+  const currentCircleRef = useRef([]);
   const isAnimatingRef = useRef(false);
 
   useEffect(() => {
@@ -30,6 +32,7 @@ const WebGLCanvas = ({ isEraserMode }) => {
       gl.clear(gl.COLOR_BUFFER_BIT);
       drawLine(linesRef.current, [0, 0, 0, 1]); // Redraw existing lines
       drawPoints(pointsRef.current); // Redraw points
+      drawCircles(circlesRef.current, [0, 0, 0, 1]); // Redraw circles
     };
 
     const drawPoints = (points) => {
@@ -46,6 +49,27 @@ const WebGLCanvas = ({ isEraserMode }) => {
       gl.enableVertexAttribArray(positionLocation);
       gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
       gl.drawArrays(gl.LINES, 0, points.length / 2);
+    };
+
+    const drawCircles = (circles, color) => {
+      gl.uniform4f(colorLocation, color[0], color[1], color[2], color[3]); // Set color
+      const aspect = canvas.width / canvas.height; // 화면 비율
+      for (const circle of circles) {
+        const [cx, cy, radius] = circle;
+        const segments = 100;
+        const angleStep = (Math.PI * 2) / segments;
+        const circlePoints = [];
+        for (let i = 0; i <= segments; i++) {
+          const angle = i * angleStep;
+          const x = cx + radius * Math.cos(angle) / aspect; // 가로 비율 적용
+          const y = cy + radius * Math.sin(angle);
+          circlePoints.push(x, y);
+        }
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(circlePoints), gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(positionLocation);
+        gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+        gl.drawArrays(gl.LINE_LOOP, 0, circlePoints.length / 2);
+      }
     };
 
     resizeCanvas();
@@ -152,6 +176,7 @@ const WebGLCanvas = ({ isEraserMode }) => {
         drawLine(linesRef.current, [0, 0, 0, 1]); // Black color for existing lines
         drawLine([x0, y0, x, y], [0, 0, 0, 1]); // Black color for animated line
         drawPoints(pointsRef.current);
+        drawCircles(circlesRef.current, [0, 0, 0, 1]); // Redraw circles
 
         if (progress < steps) {
           requestAnimationFrame(step);
@@ -162,6 +187,7 @@ const WebGLCanvas = ({ isEraserMode }) => {
           gl.clear(gl.COLOR_BUFFER_BIT);
           drawLine(linesRef.current, [0, 0, 0, 1]); // Black color for existing lines
           drawPoints(pointsRef.current);
+          drawCircles(circlesRef.current, [0, 0, 0, 1]); // Redraw circles
         }
       };
 
@@ -170,7 +196,7 @@ const WebGLCanvas = ({ isEraserMode }) => {
     };
 
     const handleMouseMove = (event) => {
-      if(isEraserMode) return
+      if (isEraserMode) return;
 
       const rect = canvas.getBoundingClientRect();
       let x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
@@ -197,8 +223,13 @@ const WebGLCanvas = ({ isEraserMode }) => {
       gl.clear(gl.COLOR_BUFFER_BIT);
       drawLine(linesRef.current, [0, 0, 0, 1]); // Black color for existing lines
       drawPoints(pointsRef.current);
+      drawCircles(circlesRef.current, [0, 0, 0, 1]); // Redraw circles
 
-      if (hoverPoint && pointsRef.current.length % 4 === 2) {
+      if (isCircleMode && currentCircleRef.current.length === 2) {
+        const [cx, cy] = currentCircleRef.current;
+        const radius = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
+        drawCircles([[cx, cy, radius]], [0, 0, 1, 1]); // Blue color for preview circle
+      } else if (hoverPoint && pointsRef.current.length % 4 === 2) {
         drawDashedLine(pointsRef.current[pointsRef.current.length - 2], pointsRef.current[pointsRef.current.length - 1], hoverPoint[0], hoverPoint[1], [0, 0, 1, 1]); // Blue dashed line
       }
     };
@@ -234,6 +265,15 @@ const WebGLCanvas = ({ isEraserMode }) => {
               break;
             }
           }
+        }
+      } else if (isCircleMode) {
+        if (currentCircleRef.current.length === 0) {
+          currentCircleRef.current.push(x, y); // Store the center of the circle
+        } else {
+          const [cx, cy] = currentCircleRef.current;
+          const radius = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
+          circlesRef.current.push([cx, cy, radius]);
+          currentCircleRef.current = [];
         }
       } else {
         for (let i = 0; i < pointsRef.current.length; i += 2) {
@@ -289,7 +329,7 @@ const WebGLCanvas = ({ isEraserMode }) => {
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('click', handleClick);
     };
-  }, [isEraserMode]);
+  }, [isEraserMode, isCircleMode]);
 
   return <canvas ref={canvasRef} style={{ display: 'block', width: '100vw', height: '100vh' }} />;
 };

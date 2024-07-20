@@ -16,13 +16,15 @@ const App = () => {
     } else if (action === 'Circle') {
       setCircleMode((prevMode) => !prevMode);
       setEraserMode(false); // Turn off eraser mode
+    } else if (action === 'Home') {
+      setEraserMode(false); // Turn off eraser mode
+      setCircleMode(false); // Turn off circle mode
     } else {
       alert(`Button ${action} clicked!`);
     }
   };
 
-
-return (
+  return (
     <div className="App">
       <WebGLCanvas isEraserMode={isEraserMode} isCircleMode={isCircleMode} />
       <div className="floating-toolbar">
