@@ -2,9 +2,9 @@ import React, { useEffect, useRef } from 'react';
 
 const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
   const canvasRef = useRef(null);
-  const pointsRef = useRef([]); // 점들의 좌표 저장
-  const linesRef = useRef([]); // 선들의 좌표 저장, 시작점과 끝점 배열로 저장 
-  const circlesRef = useRef([]); // 원들의 중심 좌표 저장, 반지름 저장
+  const pointsRef = useRef([]); // Store points' coordinates
+  const linesRef = useRef([]); // Store lines' coordinates as arrays of start and end points
+  const circlesRef = useRef([]); // Store circles' center coordinates and radius
   const currentLineRef = useRef([]);
   const currentCircleRef = useRef([]);
   const isAnimatingRef = useRef(false);
@@ -53,7 +53,7 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
 
     const drawCircles = (circles, color) => {
       gl.uniform4f(colorLocation, color[0], color[1], color[2], color[3]); // Set color
-      const aspect = canvas.width / canvas.height; // 화면 비율
+      const aspect = canvas.width / canvas.height; // Screen aspect ratio
       for (const circle of circles) {
         const [cx, cy, radius] = circle;
         const segments = 100;
@@ -61,7 +61,7 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
         const circlePoints = [];
         for (let i = 0; i <= segments; i++) {
           const angle = i * angleStep;
-          const x = cx + radius * Math.cos(angle) / aspect; // 가로 비율 적용
+          const x = cx + radius * Math.cos(angle) / aspect; // Apply horizontal aspect ratio
           const y = cy + radius * Math.sin(angle);
           circlePoints.push(x, y);
         }
@@ -200,6 +200,25 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
       drawLine(dashPoints, color);
     };
 
+    const drawDashedCircle = (cx, cy, radius, color, segments = 100, dashLength = 0.02, gapLength = 0.02) => {
+      const aspect = canvas.width / canvas.height;
+      const angleStep = (Math.PI * 2) / segments;
+      let dashPoints = [];
+
+      for (let i = 0; i < segments; i++) {
+        const angleStart = i * angleStep;
+        const angleEnd = angleStart + angleStep * (dashLength / (dashLength + gapLength));
+        const xStart = cx + radius * Math.cos(angleStart) / aspect;
+        const yStart = cy + radius * Math.sin(angleStart);
+        const xEnd = cx + radius * Math.cos(angleEnd) / aspect;
+        const yEnd = cy + radius * Math.sin(angleEnd);
+
+        dashPoints.push(xStart, yStart, xEnd, yEnd);
+      }
+
+      drawLine(dashPoints, color);
+    };
+
     const animateLine = () => {
       let progress = 0;
       const steps = 50;
@@ -271,7 +290,7 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
       if (isCircleMode && currentCircleRef.current.length === 2) {
         const [cx, cy] = currentCircleRef.current;
         const radius = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
-        drawCircles([[cx, cy, radius]], [0, 0, 1, 1]); // Blue color for preview circle
+        drawDashedCircle(cx, cy, radius, [0, 0, 1, 1]); // Blue dashed circle
       } else if (hoverPoint && pointsRef.current.length % 4 === 2) {
         drawDashedLine(pointsRef.current[pointsRef.current.length - 2], pointsRef.current[pointsRef.current.length - 1], hoverPoint[0], hoverPoint[1], [0, 0, 1, 1]); // Blue dashed line
       }
