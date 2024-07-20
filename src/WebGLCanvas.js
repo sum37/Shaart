@@ -72,6 +72,49 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
       }
     };
 
+    const animateCircle = (cx, cy, radius) => {
+      const segments = 100;
+      const angleStep = (Math.PI * 2) / segments;
+      let progress = 0;
+
+      const step = () => {
+        progress++;
+        const t = progress / segments;
+        const angle = t * 2 * Math.PI;
+        const x = cx + radius * Math.cos(angle) / (canvas.width / canvas.height);
+        const y = cy + radius * Math.sin(angle);
+
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        drawLine(linesRef.current, [0, 0, 0, 1]); // Black color for existing lines
+        drawPoints(pointsRef.current);
+        drawCircles(circlesRef.current, [0, 0, 0, 1]); // Redraw circles
+
+        const circlePoints = [];
+        for (let i = 0; i <= progress; i++) {
+          const angle = i * angleStep;
+          const x = cx + radius * Math.cos(angle) / (canvas.width / canvas.height);
+          const y = cy + radius * Math.sin(angle);
+          circlePoints.push(x, y);
+        }
+
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(circlePoints), gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(positionLocation);
+        gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+        gl.drawArrays(gl.LINE_STRIP, 0, circlePoints.length / 2);
+
+        if (progress < segments) {
+          requestAnimationFrame(step);
+        } else {
+          circlesRef.current.push([cx, cy, radius]);
+          isAnimatingRef.current = false;
+          drawScene();
+        }
+      };
+
+      requestAnimationFrame(step);
+    };
+
     resizeCanvas();
     window.addEventListener('resize', () => {
       resizeCanvas();
@@ -272,8 +315,8 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
         } else {
           const [cx, cy] = currentCircleRef.current;
           const radius = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
-          circlesRef.current.push([cx, cy, radius]);
           currentCircleRef.current = [];
+          animateCircle(cx, cy, radius);
         }
       } else {
         for (let i = 0; i < pointsRef.current.length; i += 2) {
