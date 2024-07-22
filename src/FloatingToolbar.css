@@ -1,0 +1,27 @@
+.floating-toolbar {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: row; /* Align items horizontally */
+    gap: 10px;
+    justify-content: center; /* Center items horizontally */
+    align-items: center; /* Center items vertically */
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 140px; /* Ensure the width is auto-adjusted based on content */
+  }
+  
+  .floating-toolbar button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 10px;
+  }
+  
+  .floating-toolbar button:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+  
