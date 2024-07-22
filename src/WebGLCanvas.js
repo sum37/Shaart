@@ -6,6 +6,7 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
   const linesRef = useRef([]); // Store lines' coordinates as arrays of start and end points
   const circlesRef = useRef([]); // Store circles' center coordinates and radius
   const intersectionsRef = useRef([]); // Store intersection points
+  const intersectionMapRef = useRef(new Map()); // Map to store intersection points and related shapes
   const currentLineRef = useRef([]);
   const currentCircleRef = useRef([]);
   const isAnimatingRef = useRef(false);
@@ -76,15 +77,16 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
       }
     };
 
-    const animateCircle = (cx, cy, radius) => {
+    const animateCircle = (cx, cy, radius, startX, startY) => {
       const segments = 100;
       const angleStep = (Math.PI * 2) / segments;
       let progress = 0;
+      const startAngle = Math.atan2(startY - cy, startX - cx); // Calculate start angle based on click position
 
       const step = () => {
         progress++;
         const t = progress / segments;
-        const angle = t * 2 * Math.PI;
+        const angle = startAngle + t * 2 * Math.PI;
         const x = cx + radius * Math.cos(angle);
         const y = cy + radius * Math.sin(angle);
 
@@ -97,7 +99,7 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
 
         const circlePoints = [];
         for (let i = 0; i <= progress; i++) {
-          const angle = i * angleStep;
+          const angle = startAngle + i * angleStep;
           const x = cx + radius * Math.cos(angle);
           const y = cy + radius * Math.sin(angle);
           circlePoints.push(x, y);
@@ -124,6 +126,7 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
 
     const findIntersections = () => {
       intersectionsRef.current = [];
+      intersectionMapRef.current.clear();
 
       // Check intersections between lines
       for (let i = 0; i < linesRef.current.length; i += 4) {
@@ -133,6 +136,11 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
           const intersection = getLineIntersection(x1, y1, x2, y2, x3, y3, x4, y4);
           if (intersection) {
             intersectionsRef.current.push(intersection[0], intersection[1]);
+            const key = `${intersection[0]},${intersection[1]}`;
+            if (!intersectionMapRef.current.has(key)) {
+              intersectionMapRef.current.set(key, []);
+            }
+            intersectionMapRef.current.get(key).push(`line:${i}`, `line:${j}`);
           }
         }
       }
@@ -140,10 +148,18 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
       // Check intersections between lines and circles
       for (let i = 0; i < linesRef.current.length; i += 4) {
         const [x1, y1, x2, y2] = linesRef.current.slice(i, i + 4);
-        for (const [cx, cy, radius] of circlesRef.current) {
+        for (let j = 0; j < circlesRef.current.length; j++) {
+          const [cx, cy, radius] = circlesRef.current[j];
           const intersections = getLineCircleIntersections(x1, y1, x2, y2, cx, cy, radius);
           if (intersections) {
-            intersectionsRef.current.push(...intersections);
+            intersections.forEach(([ix, iy]) => {
+              intersectionsRef.current.push(ix, iy);
+              const key = `${ix},${iy}`;
+              if (!intersectionMapRef.current.has(key)) {
+                intersectionMapRef.current.set(key, []);
+              }
+              intersectionMapRef.current.get(key).push(`line:${i}`, `circle:${j}`);
+            });
           }
         }
       }
@@ -155,7 +171,14 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
           const [cx2, cy2, r2] = circlesRef.current[j];
           const intersections = getCircleCircleIntersections(cx1, cy1, r1, cx2, cy2, r2);
           if (intersections) {
-            intersectionsRef.current.push(...intersections);
+            intersections.forEach(([ix, iy]) => {
+              intersectionsRef.current.push(ix, iy);
+              const key = `${ix},${iy}`;
+              if (!intersectionMapRef.current.has(key)) {
+                intersectionMapRef.current.set(key, []);
+              }
+              intersectionMapRef.current.get(key).push(`circle:${i}`, `circle:${j}`);
+            });
           }
         }
       }
@@ -203,11 +226,11 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
       const intersections = [];
 
       if (t1 >= 0 && t1 <= 1) {
-        intersections.push(x1 + t1 * dx, y1 + t1 * dy);
+        intersections.push([x1 + t1 * dx, y1 + t1 * dy]);
       }
 
       if (t2 >= 0 && t2 <= 1) {
-        intersections.push(x1 + t2 * dx, y1 + t2 * dy);
+        intersections.push([x1 + t2 * dx, y1 + t2 * dy]);
       }
 
       return intersections.length > 0 ? intersections : null;
@@ -231,7 +254,7 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
       const xs2 = xm - (h * dy) / d;
       const ys2 = ym + (h * dx) / d;
 
-      return [xs1, ys1, xs2, ys2];
+      return [[xs1, ys1], [xs2, ys2]];
     };
 
     resizeCanvas();
@@ -507,6 +530,7 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
           const y1 = linesRef.current[i + 3];
           if (isPointNearLineSegment(x, y, x0, y0, x1, y1, magneticRadius)) {
             linesRef.current.splice(i, 4);
+            removeIntersections(`line:${i}`);
             lineRemoved = true;
             break;
           }
@@ -533,6 +557,7 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
               const distance = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
               if (distance < radius + magneticRadius) {
                 circlesRef.current.splice(i, 1);
+                removeIntersections(`circle:${i}`);
                 break;
               }
             }
@@ -545,7 +570,7 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
           const [cx, cy] = currentCircleRef.current;
           const radius = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
           currentCircleRef.current = [];
-          animateCircle(cx, cy, radius);
+          animateCircle(cx, cy, radius, x, y); // Pass startX and startY for the start angle calculation
         }
       } else {
         pointsRef.current.push(x, y);
@@ -563,6 +588,25 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
       }
 
       drawScene();
+    };
+
+    const removeIntersections = (shape) => {
+      intersectionsRef.current = intersectionsRef.current.filter((_, index) => {
+        if (index % 2 !== 0) return true; // Skip every other index (y-coordinates)
+        const key = `${intersectionsRef.current[index]},${intersectionsRef.current[index + 1]}`;
+        const shapes = intersectionMapRef.current.get(key);
+        if (shapes) {
+          const shapeIndex = shapes.indexOf(shape);
+          if (shapeIndex !== -1) {
+            shapes.splice(shapeIndex, 1);
+          }
+          if (shapes.length === 0) {
+            intersectionMapRef.current.delete(key);
+            return false;
+          }
+        }
+        return true;
+      });
     };
 
     const isPointNearLineSegment = (px, py, x0, y0, x1, y1, radius) => {
