@@ -529,8 +529,10 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
           const x1 = linesRef.current[i + 2];
           const y1 = linesRef.current[i + 3];
           if (isPointNearLineSegment(x, y, x0, y0, x1, y1, magneticRadius)) {
-            linesRef.current.splice(i, 4);
+            const [startX, startY, endX, endY] = linesRef.current.splice(i, 4);
             removeIntersections(`line:${i}`);
+            removePoint(startX, startY);
+            removePoint(endX, endY);
             lineRemoved = true;
             break;
           }
@@ -607,6 +609,15 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
         }
         return true;
       });
+    };
+
+    const removePoint = (x, y) => {
+      for (let i = 0; i < pointsRef.current.length; i += 2) {
+        if (pointsRef.current[i] === x && pointsRef.current[i + 1] === y) {
+          pointsRef.current.splice(i, 2);
+          break;
+        }
+      }
     };
 
     const isPointNearLineSegment = (px, py, x0, y0, x1, y1, radius) => {
