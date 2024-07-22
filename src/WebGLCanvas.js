@@ -432,6 +432,7 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
       let closestPoint = null;
       let closestLine = null;
       let closestCircle = null;
+      let closestDistance = Infinity;
 
       if (!isEraserMode) {
         const allPoints = [...pointsRef.current, ...intersectionsRef.current]; // Include intersections in points check
@@ -439,12 +440,12 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
           const px = allPoints[i];
           const py = allPoints[i + 1];
           const distance = Math.sqrt((x - px) ** 2 + (y - py) ** 2);
-          if (distance < magneticRadius) {
+          if (distance < magneticRadius && distance < closestDistance) {
             x = px;
             y = py;
             isNearPoint = true;
             closestPoint = [x, y];
-            break;
+            closestDistance = distance;
           }
         }
       } else {
@@ -454,20 +455,22 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
           const y0 = linesRef.current[i + 1];
           const x1 = linesRef.current[i + 2];
           const y1 = linesRef.current[i + 3];
-          if (isPointNearLineSegment(x, y, x0, y0, x1, y1, magneticRadius)) {
+          const distance = Math.min(
+            distanceToSegment(x, y, x0, y0, x1, y1),
+            closestDistance
+          );
+          if (distance < magneticRadius && distance < closestDistance) {
             closestLine = [x0, y0, x1, y1];
-            break;
+            closestDistance = distance;
           }
         }
 
-        if (!closestLine) {
-          for (let i = 0; i < circlesRef.current.length; i++) {
-            const [cx, cy, radius] = circlesRef.current[i];
-            const distance = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
-            if (distance < radius + magneticRadius) {
-              closestCircle = [cx, cy, radius];
-              break;
-            }
+        for (let i = 0; i < circlesRef.current.length; i++) {
+          const [cx, cy, radius] = circlesRef.current[i];
+          const distance = Math.abs(Math.sqrt((x - cx) ** 2 + (y - cy) ** 2) - radius);
+          if (distance < magneticRadius && distance < closestDistance) {
+            closestCircle = [cx, cy, radius];
+            closestDistance = distance;
           }
         }
       }
@@ -521,49 +524,45 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
       }
 
       if (isEraserMode) {
-        // Eraser mode: remove the nearest line if clicked near it
-        let lineRemoved = false;
+        let closestShape = null;
+        let closestDistance = Infinity;
+
+        // Eraser mode: find the nearest line or circle
         for (let i = 0; i < linesRef.current.length; i += 4) {
           const x0 = linesRef.current[i];
           const y0 = linesRef.current[i + 1];
           const x1 = linesRef.current[i + 2];
           const y1 = linesRef.current[i + 3];
-          if (isPointNearLineSegment(x, y, x0, y0, x1, y1, magneticRadius)) {
-            const [startX, startY, endX, endY] = linesRef.current.splice(i, 4);
-            removeIntersections(`line:${i}`);
-            removePoint(startX, startY);
-            removePoint(endX, endY);
-            lineRemoved = true;
-            break;
+          const distance = Math.min(
+            distanceToSegment(x, y, x0, y0, x1, y1),
+            closestDistance
+          );
+          if (distance < magneticRadius && distance < closestDistance) {
+            closestShape = { type: 'line', index: i, points: [x0, y0, x1, y1] };
+            closestDistance = distance;
           }
         }
 
-        if (!lineRemoved) {
-          // Eraser mode: remove the nearest point if clicked near it
-          let pointRemoved = false;
-          for (let i = 0; i < pointsRef.current.length; i += 2) {
-            const px = pointsRef.current[i];
-            const py = pointsRef.current[i + 1];
-            const distance = Math.sqrt((x - px) ** 2 + (y - py) ** 2);
-            if (distance < magneticRadius) {
-              pointsRef.current.splice(i, 2);
-              pointRemoved = true;
-              break;
-            }
+        for (let i = 0; i < circlesRef.current.length; i++) {
+          const [cx, cy, radius] = circlesRef.current[i];
+          const distance = Math.abs(Math.sqrt((x - cx) ** 2 + (y - cy) ** 2) - radius);
+          if (distance < magneticRadius && distance < closestDistance) {
+            closestShape = { type: 'circle', index: i, points: [cx, cy, radius] };
+            closestDistance = distance;
           }
+        }
 
-          if (!pointRemoved) {
-            // Eraser mode: remove the nearest circle if clicked near it
-            for (let i = 0; i < circlesRef.current.length; i++) {
-              const [cx, cy, radius] = circlesRef.current[i];
-              const distance = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
-              if (distance < radius + magneticRadius) {
-                circlesRef.current.splice(i, 1);
-                removeIntersections(`circle:${i}`);
-                break;
-              }
-            }
+        if (closestShape) {
+          if (closestShape.type === 'line') {
+            const [startX, startY, endX, endY] = linesRef.current.splice(closestShape.index, 4);
+            removeIntersections(`line:${closestShape.index}`);
+            removePoint(startX, startY);
+            removePoint(endX, endY);
+          } else if (closestShape.type === 'circle') {
+            circlesRef.current.splice(closestShape.index, 1);
+            removeIntersections(`circle:${closestShape.index}`);
           }
+          findIntersections();
         }
       } else if (isCircleMode) {
         if (currentCircleRef.current.length === 0) {
@@ -620,7 +619,7 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
       }
     };
 
-    const isPointNearLineSegment = (px, py, x0, y0, x1, y1, radius) => {
+    const distanceToSegment = (px, py, x0, y0, x1, y1) => {
       const dx = x1 - x0;
       const dy = y1 - y0;
       const lengthSquared = dx * dx + dy * dy;
@@ -628,8 +627,7 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
       const clampedT = Math.max(0, Math.min(1, t));
       const closestX = x0 + clampedT * dx;
       const closestY = y0 + clampedT * dy;
-      const distance = Math.sqrt((px - closestX) ** 2 + (py - closestY) ** 2);
-      return distance < radius;
+      return Math.sqrt((px - closestX) ** 2 + (py - closestY) ** 2);
     };
 
     canvas.addEventListener('mousemove', handleMouseMove);
