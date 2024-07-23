@@ -8,36 +8,35 @@ import { useAuth } from './authContext';
 import './App.css';
 import { ReactComponent as LineIcon } from './assets/line.svg';
 import { ReactComponent as CircleIcon } from './assets/circle.svg';
-import { BiSolidEraser, BiLogOut } from "react-icons/bi"; // Import the logout icon
-
+import { BiSolidEraser } from "react-icons/bi";
 
 const PrivateRoute = ({ element }) => {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? element : <Navigate to="/login" />;
 };
 
-
 const App = () => {
   const [isEraserMode, setEraserMode] = useState(false);
   const [isCircleMode, setCircleMode] = useState(false);
-  const { logout } = useAuth(); // Get the logout function from context
-  const navigate = useNavigate(); // Get the navigate function from react-router-dom
-
+  const [activeButton, setActiveButton] = useState('');
+  const navigate = useNavigate();
 
   const handleClick = (action) => {
     console.log(`Button ${action} clicked`);
     if (action === 'Eraser') {
       setEraserMode((prevMode) => !prevMode);
-      setCircleMode(false); // Turn off circle mode
+      setCircleMode(false);
+      setActiveButton((prevMode) => (prevMode === 'Eraser' ? '' : 'Eraser'));
     } else if (action === 'Circle') {
       setCircleMode((prevMode) => !prevMode);
-      setEraserMode(false); // Turn off eraser mode
-    } else if (action === 'Logout') {
-      logout(navigate); // Call the logout function with navigate
+      setEraserMode(false);
+      setActiveButton((prevMode) => (prevMode === 'Circle' ? '' : 'Circle'));
     } else {
       alert(`Button ${action} clicked!`);
     }
   };
+
+  const shouldShowToolbar = ['/webglcanvas'].includes(window.location.pathname);
 
   return (
     <div className="App">
@@ -45,9 +44,31 @@ const App = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/dashboard" element={<PrivateRoute element={<DashboardPage />} />} />
-        <Route path="/webglcanvas" element={<PrivateRoute element={<WebGLCanvas isEraserMode={isEraserMode} isCircleMode={isCircleMode} handleClick={handleClick} />} />} />
+        <Route path="/webglcanvas" element={<PrivateRoute element={<WebGLCanvas isEraserMode={isEraserMode} isCircleMode={isCircleMode} />} />} />
         <Route path="/" element={<Navigate to="/dashboard" />} />
       </Routes>
+      {shouldShowToolbar && (
+        <div className="floating-toolbar">
+          <button
+            onClick={() => handleClick('Home')}
+            className={activeButton === 'Home' ? 'active' : ''}
+          >
+            <LineIcon />
+          </button>
+          <button
+            onClick={() => handleClick('Circle')}
+            className={activeButton === 'Circle' ? 'active' : ''}
+          >
+            <CircleIcon />
+          </button>
+          <button
+            onClick={() => handleClick('Eraser')}
+            className={activeButton === 'Eraser' ? 'active' : ''}
+          >
+            <BiSolidEraser />
+          </button>
+        </div>
+      )}
     </div>
   );
 };

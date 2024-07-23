@@ -1,16 +1,30 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { BiLogOut } from "react-icons/bi";
 import './DashboardPage.css';
+import { useAuth } from './authContext';
 
 const DashboardPage = () => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const handleCardClick = () => {
     navigate('/webglcanvas'); // Navigate to WebGLCanvas page
   };
 
+  const handleLogout = () => {
+    logout(navigate); // Call the logout function with navigate
+  };
+
   return (
     <div className="dashboard-page">
+      <header className="top-bar">
+        <div className="brand">Shaart</div>
+        <button className="logout-button" onClick={handleLogout}>
+          <BiLogOut />
+          Logout
+        </button>
+      </header>
       <header className="dashboard-header">
         <h1>Hello Daniel</h1>
         <p>Do you already know what you will design today? Choose a project to get inspired 😊</p>
