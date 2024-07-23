@@ -397,7 +397,7 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
           for (const [cx, cy, radius] of circlesRef.current) {
             const intersections = getLineCircleIntersections(x1, y1, x2, y2, cx, cy, radius);
             if (intersections) {
-              tempIntersections.push(...intersections);
+              tempIntersections.push(...intersections.flat());
             }
           }
         }
@@ -407,7 +407,7 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
             const [cx2, cy2, r2] = circlesRef.current[j];
             const intersections = getCircleCircleIntersections(cx1, cy1, r1, cx2, cy2, r2);
             if (intersections) {
-              tempIntersections.push(...intersections);
+              tempIntersections.push(...intersections.flat());
             }
           }
         }
