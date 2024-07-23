@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 
 const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
   const canvasRef = useRef(null);
+  const textCanvasRef = useRef(null); // Ref for the second canvas for text
   const pointsRef = useRef([]); // Store points' coordinates
   const linesRef = useRef([]); // Store lines' coordinates as arrays of start and end points
   const circlesRef = useRef([]); // Store circles' center coordinates and radius
@@ -15,7 +16,9 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
 
   useEffect(() => {
     const canvas = canvasRef.current;
+    const textCanvas = textCanvasRef.current;
     const gl = canvas.getContext('webgl');
+    const ctx = textCanvas.getContext('2d');
 
     if (!gl) {
       console.error('WebGL not supported');
@@ -30,6 +33,8 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
       const devicePixelRatio = window.devicePixelRatio || 1;
       canvas.width = size * devicePixelRatio;
       canvas.height = size * devicePixelRatio;
+      textCanvas.width = size * devicePixelRatio;
+      textCanvas.height = size * devicePixelRatio;
       gl.viewport(0, 0, canvas.width, canvas.height);
     };
 
@@ -423,6 +428,19 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
       isNearPoint = false;
     };
 
+    const calculateDistance = (x1, y1, x2, y2) => {
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      return Math.sqrt(dx * dx + dy * dy);
+    };
+
+    const renderText = (text, x, y) => {
+      ctx.clearRect(0, 0, textCanvas.width, textCanvas.height); // Clear previous text
+      ctx.font = '20px Arial';
+      ctx.fillStyle = 'black';
+      ctx.fillText(text, x, y);
+    };
+
     const handleMouseMove = (event) => {
       const rect = canvas.getBoundingClientRect();
       let x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
@@ -501,8 +519,17 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
         const [cx, cy] = currentCircleRef.current;
         const radius = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
         drawDashedCircle(cx, cy, radius, [0, 0, 1, 1]); // Blue dashed circle
+
+        // Render the radius
+        renderText(`Radius: ${radius.toFixed(2)}`, event.clientX, event.clientY - 10);
       } else if (hoverPoint && pointsRef.current.length % 4 === 2) {
         drawDashedLine(pointsRef.current[pointsRef.current.length - 2], pointsRef.current[pointsRef.current.length - 1], hoverPoint[0], hoverPoint[1], [0, 0, 1, 1]); // Blue dashed line
+
+        // Calculate and render the line length if a line is being drawn
+        const startX = pointsRef.current[pointsRef.current.length - 2];
+        const startY = pointsRef.current[pointsRef.current.length - 1];
+        const length = calculateDistance(startX, startY, x, y);
+        renderText(`Length: ${length.toFixed(2)}`, event.clientX, event.clientY - 10);
       }
     };
 
@@ -571,6 +598,9 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
           const [cx, cy] = currentCircleRef.current;
           const radius = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
           currentCircleRef.current = [];
+
+          // Clear the text rendering context before the circle animation starts
+          ctx.clearRect(0, 0, textCanvas.width, textCanvas.height);
           animateCircle(cx, cy, radius, x, y); // Pass startX and startY for the start angle calculation
         }
       } else {
@@ -579,6 +609,9 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
         if (pointsRef.current.length % 4 === 0) {
           currentLineRef.current = pointsRef.current.slice(-4);
           isAnimatingRef.current = true;
+
+          // Clear the text rendering context before the line animation starts
+          ctx.clearRect(0, 0, textCanvas.width, textCanvas.height);
           animateLine();
           canvas.style.cursor = 'default';
         } else {
@@ -645,7 +678,12 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
     };
   }, [isEraserMode, isCircleMode]);
 
-  return <canvas ref={canvasRef} style={{ display: 'block' }} />;
+  return (
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+      <canvas ref={canvasRef} style={{ display: 'block', position: 'absolute', top: 0, left: 0 }} />
+      <canvas ref={textCanvasRef} style={{ display: 'block', position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }} />
+    </div>
+  );
 };
 
 export default WebGLCanvas;
