@@ -18,12 +18,40 @@ const DashboardPage = () => {
       <main>
         <div className="card-container">
           <div className="card" onClick={handleCardClick}>
-            <h3>Add new project</h3>
-            <p>Start and modify your tasks in a new and improved way.</p>
+            <div className="card-icon">&#128736;</div> {/* Placeholder for an icon */}
+            <h3>Training course</h3>
+            <p>Improve students' ability level through training courses.</p>
+            <p className="card-footer"><span>2 days left</span> <span className="price">$36</span></p>
           </div>
           <div className="card" onClick={handleCardClick}>
-            <h3>Friendly painters</h3>
-            <p>Task: Practice<br />Date: 03/07/2020</p>
+            <div className="card-icon">&#127916;</div>
+            <h3>Live course</h3>
+            <p>Improve students' ability level through live courses.</p>
+            <p className="card-footer"><span>3 days left</span> <span className="price">-$28</span></p>
+          </div>
+          <div className="card" onClick={handleCardClick}>
+            <div className="card-icon">&#128249;</div>
+            <h3>Video course</h3>
+            <p>Improve students' ability level through video courses.</p>
+            <p className="card-footer"><span>3 days left</span> <span className="price">$15</span></p>
+          </div>
+          <div className="card" onClick={handleCardClick}>
+            <div className="card-icon">&#127909;</div>
+            <h3>Radio course</h3>
+            <p>Improve students' ability through single-choice courses.</p>
+            <p className="card-footer"><span>2 days left</span> <span className="price">$18</span></p>
+          </div>
+          <div className="card" onClick={handleCardClick}>
+            <div className="card-icon">&#128221;</div>
+            <h3>Package course</h3>
+            <p>Improve students' abilities through package courses.</p>
+            <p className="card-footer"><span>3 days left</span> <span className="price">-$25</span></p>
+          </div>
+          <div className="card" onClick={handleCardClick}>
+            <div className="card-icon">&#128214;</div>
+            <h3>Other course</h3>
+            <p>Improve students' abilities through other courses.</p>
+            <p className="card-footer"><span>3 days left</span> <span className="price">$28</span></p>
           </div>
           {/* Add more cards as needed */}
         </div>
