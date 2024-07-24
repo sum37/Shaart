@@ -475,9 +475,9 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
       let closestDistance = Infinity;
       let closestEndpoints = [];
     
-      const defaultEndpointSize = 0.006;
+      const defaultEndpointSize = 0.005;
       const hoverEndpointSize = 0.007;
-      const defaultIntersectionSize = 0.005;
+      const defaultIntersectionSize = 0.004;
       const hoverIntersectionSize = 0.006;
     
       if (!isEraserMode) {
@@ -563,16 +563,17 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
         drawDashedCircle(cx, cy, radius, [142 / 255, 61 / 255, 255 / 255, 1]); // Blue dashed circle
     
         // Render the radius
-        renderText(`Radius: ${radius.toFixed(2)}`, event.clientX, event.clientY - 10);
+        renderText(`Radius: ${(radius * 10).toFixed(1)}`, event.clientX, event.clientY - 10);
       } else if (!isCircleMode && hoverPoint && currentLineRef.current.length === 2) {
         const [startX, startY] = currentLineRef.current;
         drawDashedLine(startX, startY, hoverPoint[0], hoverPoint[1], [142 / 255, 61 / 255, 255 / 255, 1]); // Blue dashed line
     
         // Calculate and render the line length if a line is being drawn
         const length = calculateDistance(startX, startY, x, y);
-        renderText(`Length: ${length.toFixed(2)}`, event.clientX, event.clientY - 10);
+        renderText(`Length: ${(length * 10).toFixed(1)}`, event.clientX, event.clientY - 10);
       }
     };
+    
     
     
 
