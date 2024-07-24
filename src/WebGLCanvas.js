@@ -40,26 +40,49 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
 
     const drawScene = () => {
       gl.clear(gl.COLOR_BUFFER_BIT);
-      drawLine(linesRef.current, [0, 0, 0, 1]); // Redraw existing lines
-      drawPoints(pointsRef.current); // Redraw points
+      drawLines(linesRef.current, [0, 0, 0, 1]); // Redraw existing lines
       drawCircles(circlesRef.current, [0, 0, 0, 1]); // Redraw circles
-      drawPoints(intersectionsRef.current, [0, 1, 1, 1]); // Draw intersections in mint color
+      drawFilledCircles(pointsRef.current, 0.005, [0, 0, 0, 1]); // Draw points as black circles
+      drawFilledCircles(intersectionsRef.current, 0.005, [0, 0, 0, 1]); // Draw intersections as black circles
     };
 
-    const drawPoints = (points, color = [1, 0, 0, 1]) => {
-      gl.uniform4f(colorLocation, color[0], color[1], color[2], color[3]); // Set color for points
-      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(points), gl.STATIC_DRAW);
-      gl.enableVertexAttribArray(positionLocation);
-      gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
-      gl.drawArrays(gl.POINTS, 0, points.length / 2);
-    };
-
-    const drawLine = (points, color) => {
+    const drawFilledCircles = (points, radius, color) => {
       gl.uniform4f(colorLocation, color[0], color[1], color[2], color[3]); // Set color
-      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(points), gl.STATIC_DRAW);
+      const segments = 20; // Number of segments to approximate a circle
+      const angleStep = (Math.PI * 2) / segments;
+
+      for (let i = 0; i < points.length; i += 2) {
+        const cx = points[i];
+        const cy = points[i + 1];
+        const circleVertices = [];
+
+        for (let j = 0; j <= segments; j++) {
+          const angle = j * angleStep;
+          const x = cx + radius * Math.cos(angle);
+          const y = cy + radius * Math.sin(angle);
+          circleVertices.push(x, y);
+        }
+
+        const vertices = [];
+        for (let j = 0; j < circleVertices.length - 2; j++) {
+          vertices.push(cx, cy);
+          vertices.push(circleVertices[j * 2], circleVertices[j * 2 + 1]);
+          vertices.push(circleVertices[(j + 1) * 2], circleVertices[(j + 1) * 2 + 1]);
+        }
+
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(positionLocation);
+        gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+        gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 2);
+      }
+    };
+
+    const drawLines = (lines, color) => {
+      gl.uniform4f(colorLocation, color[0], color[1], color[2], color[3]); // Set color
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(lines), gl.STATIC_DRAW);
       gl.enableVertexAttribArray(positionLocation);
       gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
-      gl.drawArrays(gl.LINES, 0, points.length / 2);
+      gl.drawArrays(gl.LINES, 0, lines.length / 2);
     };
 
     const drawCircles = (circles, color) => {
@@ -82,29 +105,28 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
       }
     };
 
-    const animateCircle = (cx, cy, radius, startX, startY) => {
+    const animateCircle = (cx, cy, radius) => {
       const segments = 100;
       const angleStep = (Math.PI * 2) / segments;
       let progress = 0;
-      const startAngle = Math.atan2(startY - cy, startX - cx); // Calculate start angle based on click position
 
       const step = () => {
         progress++;
         const t = progress / segments;
-        const angle = startAngle + t * 2 * Math.PI;
+        const angle = t * 2 * Math.PI;
         const x = cx + radius * Math.cos(angle);
         const y = cy + radius * Math.sin(angle);
 
         gl.clear(gl.COLOR_BUFFER_BIT);
 
-        drawLine(linesRef.current, [0, 0, 0, 1]); // Black color for existing lines
-        drawPoints(pointsRef.current);
+        drawLines(linesRef.current, [0, 0, 0, 1]); // Black color for existing lines
         drawCircles(circlesRef.current, [0, 0, 0, 1]); // Redraw circles
-        drawPoints(intersectionsRef.current, [0, 1, 1, 1]); // Redraw intersections
+        drawFilledCircles(pointsRef.current, 0.005, [0, 0, 0, 1]); // Redraw points as black circles
+        drawFilledCircles(intersectionsRef.current, 0.005, [0, 0, 0, 1]); // Redraw intersections as black circles
 
         const circlePoints = [];
         for (let i = 0; i <= progress; i++) {
-          const angle = startAngle + i * angleStep;
+          const angle = i * angleStep;
           const x = cx + radius * Math.cos(angle);
           const y = cy + radius * Math.sin(angle);
           circlePoints.push(x, y);
@@ -338,7 +360,7 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
         dashPoints.push(startX, startY, endX, endY);
       }
 
-      drawLine(dashPoints, color);
+      drawLines(dashPoints, color);
     };
 
     const drawDashedCircle = (cx, cy, radius, color, segments = 100, dashLength = 0.02, gapLength = 0.02) => {
@@ -356,7 +378,7 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
         dashPoints.push(xStart, yStart, xEnd, yEnd);
       }
 
-      drawLine(dashPoints, color);
+      drawLines(dashPoints, color);
     };
 
     const animateLine = () => {
@@ -375,10 +397,10 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
 
         gl.clear(gl.COLOR_BUFFER_BIT);
 
-        drawLine(linesRef.current, [0, 0, 0, 1]); // Black color for existing lines
-        drawLine([x0, y0, x, y], [0, 0, 0, 1]); // Black color for animated line
-        drawPoints(pointsRef.current);
+        drawLines(linesRef.current, [0, 0, 0, 1]); // Black color for existing lines
+        drawLines([x0, y0, x, y], [0, 0, 0, 1]); // Black color for animated line
         drawCircles(circlesRef.current, [0, 0, 0, 1]); // Redraw circles
+        drawFilledCircles(pointsRef.current, 0.005, [0, 0, 0, 1]); // Redraw points as black circles
 
         const tempLines = [...linesRef.current, x0, y0, x, y];
         const tempIntersections = [];
@@ -411,7 +433,7 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
             }
           }
         }
-        drawPoints(tempIntersections, [0, 1, 1, 1]); // Mint color for intersections
+        drawFilledCircles(tempIntersections, 0.005, [0, 0, 0, 1]); // Black circles for intersections
 
         if (progress < steps) {
           requestAnimationFrame(step);
@@ -498,17 +520,17 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
       canvas.style.cursor = isNearPoint || closestLine || closestCircle ? 'pointer' : 'default';
 
       gl.clear(gl.COLOR_BUFFER_BIT);
-      drawLine(linesRef.current, [0, 0, 0, 1]); // Black color for existing lines
-      drawPoints(pointsRef.current);
+      drawLines(linesRef.current, [0, 0, 0, 1]); // Black color for existing lines
       drawCircles(circlesRef.current, [0, 0, 0, 1]); // Redraw circles
-      drawPoints(intersectionsRef.current, [0, 1, 1, 1]); // Redraw intersections
+      drawFilledCircles(pointsRef.current, 0.005, [0, 0, 0, 1]); // Redraw points as black circles
+      drawFilledCircles(intersectionsRef.current, 0.005, [0, 0, 0, 1]); // Redraw intersections as black circles
 
       if (closestPoint) {
-        drawPoints([closestPoint[0], closestPoint[1]], [1, 0.5, 0, 1]); // Orange color for the closest point
+        drawFilledCircles([closestPoint[0], closestPoint[1]], 0.005, [1, 0.5, 0, 1]); // Orange color for the closest point
       }
 
       if (closestLine) {
-        drawLine(closestLine, [0, 1, 0, 1]); // Green color for the nearest line
+        drawLines(closestLine, [0, 1, 0, 1]); // Green color for the nearest line
       }
 
       if (closestCircle) {
@@ -522,12 +544,11 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
 
         // Render the radius
         renderText(`Radius: ${radius.toFixed(2)}`, event.clientX, event.clientY - 10);
-      } else if (hoverPoint && pointsRef.current.length % 4 === 2) {
-        drawDashedLine(pointsRef.current[pointsRef.current.length - 2], pointsRef.current[pointsRef.current.length - 1], hoverPoint[0], hoverPoint[1], [0, 0, 1, 1]); // Blue dashed line
+      } else if (!isCircleMode && hoverPoint && currentLineRef.current.length === 2) {
+        const [startX, startY] = currentLineRef.current;
+        drawDashedLine(startX, startY, hoverPoint[0], hoverPoint[1], [0, 0, 1, 1]); // Blue dashed line
 
         // Calculate and render the line length if a line is being drawn
-        const startX = pointsRef.current[pointsRef.current.length - 2];
-        const startY = pointsRef.current[pointsRef.current.length - 1];
         const length = calculateDistance(startX, startY, x, y);
         renderText(`Length: ${length.toFixed(2)}`, event.clientX, event.clientY - 10);
       }
@@ -594,6 +615,7 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
       } else if (isCircleMode) {
         if (currentCircleRef.current.length === 0) {
           currentCircleRef.current.push(x, y); // Store the center of the circle
+          pointsRef.current.push(x, y); // Add the center point to points array
         } else {
           const [cx, cy] = currentCircleRef.current;
           const radius = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
@@ -601,23 +623,21 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
 
           // Clear the text rendering context before the circle animation starts
           ctx.clearRect(0, 0, textCanvas.width, textCanvas.height);
-          animateCircle(cx, cy, radius, x, y); // Pass startX and startY for the start angle calculation
+          animateCircle(cx, cy, radius); // Simplified circle animation call
         }
       } else {
-        pointsRef.current.push(x, y);
-
-        if (pointsRef.current.length % 4 === 0) {
-          currentLineRef.current = pointsRef.current.slice(-4);
+        if (currentLineRef.current.length === 0) {
+          currentLineRef.current.push(x, y);
+        } else {
+          pointsRef.current.push(...currentLineRef.current);
+          pointsRef.current.push(x, y);
+          currentLineRef.current.push(x, y);
           isAnimatingRef.current = true;
 
           // Clear the text rendering context before the line animation starts
           ctx.clearRect(0, 0, textCanvas.width, textCanvas.height);
           animateLine();
           canvas.style.cursor = 'default';
-        } else {
-          gl.clear(gl.COLOR_BUFFER_BIT);
-          drawLine(linesRef.current, [0, 0, 0, 1]); // Black color for existing lines
-          drawPoints(pointsRef.current);
         }
       }
 
@@ -671,7 +691,10 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
 
     drawScene();
 
+    // Clear state when mode changes
     return () => {
+      currentLineRef.current = [];
+      currentCircleRef.current = [];
       window.removeEventListener('resize', resizeCanvas);
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('click', handleClick);

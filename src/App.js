@@ -12,7 +12,7 @@ import { BiSolidEraser } from "react-icons/bi";
 
 const PrivateRoute = ({ element }) => {
   const { isAuthenticated } = useAuth();
-  return isAuthenticated ? element : <Navigate to="/login" />;
+  return element
 };
 
 const App = () => {
