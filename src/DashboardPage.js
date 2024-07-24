@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BiLogOut } from "react-icons/bi";
 import './DashboardPage.css';
+import Card from './Card';
 import { useAuth } from './authContext';
 
 const DashboardPage = () => {
@@ -31,42 +32,54 @@ const DashboardPage = () => {
       </header>
       <main>
         <div className="card-container">
-          <div className="card" onClick={handleCardClick}>
-            <div className="card-icon">&#128736;</div> {/* Placeholder for an icon */}
-            <h3>Training course</h3>
-            <p>Improve students' ability level through training courses.</p>
-            <p className="card-footer"><span>2 days left</span> <span className="price">$36</span></p>
-          </div>
-          <div className="card" onClick={handleCardClick}>
-            <div className="card-icon">&#127916;</div>
-            <h3>Live course</h3>
-            <p>Improve students' ability level through live courses.</p>
-            <p className="card-footer"><span>3 days left</span> <span className="price">-$28</span></p>
-          </div>
-          <div className="card" onClick={handleCardClick}>
-            <div className="card-icon">&#128249;</div>
-            <h3>Video course</h3>
-            <p>Improve students' ability level through video courses.</p>
-            <p className="card-footer"><span>3 days left</span> <span className="price">$15</span></p>
-          </div>
-          <div className="card" onClick={handleCardClick}>
-            <div className="card-icon">&#127909;</div>
-            <h3>Radio course</h3>
-            <p>Improve students' ability through single-choice courses.</p>
-            <p className="card-footer"><span>2 days left</span> <span className="price">$18</span></p>
-          </div>
-          <div className="card" onClick={handleCardClick}>
-            <div className="card-icon">&#128221;</div>
-            <h3>Package course</h3>
-            <p>Improve students' abilities through package courses.</p>
-            <p className="card-footer"><span>3 days left</span> <span className="price">-$25</span></p>
-          </div>
-          <div className="card" onClick={handleCardClick}>
-            <div className="card-icon">&#128214;</div>
-            <h3>Other course</h3>
-            <p>Improve students' abilities through other courses.</p>
-            <p className="card-footer"><span>3 days left</span> <span className="price">$28</span></p>
-          </div>
+          <Card
+            icon="&#128736;"
+            title="Training course"
+            description="Improve students' ability level through training courses."
+            footerLeft="2 days left"
+            footerRight="$36"
+            onClick={handleCardClick}
+          />
+          <Card
+            icon="&#127916;"
+            title="Live course"
+            description="Improve students' ability level through live courses."
+            footerLeft="3 days left"
+            footerRight="-$28"
+            onClick={handleCardClick}
+          />
+          <Card
+            icon="&#128249;"
+            title="Video course"
+            description="Improve students' ability level through video courses."
+            footerLeft="3 days left"
+            footerRight="$15"
+            onClick={handleCardClick}
+          />
+          <Card
+            icon="&#127909;"
+            title="Radio course"
+            description="Improve students' ability through single-choice courses."
+            footerLeft="2 days left"
+            footerRight="$18"
+            onClick={handleCardClick}
+          />
+          <Card
+            icon="&#128221;"
+            title="Package course"
+            description="Improve students' abilities through package courses."
+            footerLeft="3 days left"
+            footerRight="-$25"
+            onClick={handleCardClick}
+          />
+          <Card
+            icon="&#128214;"
+            title="Other course"
+            description="Improve students' abilities through other courses."
+            footerLeft="3 days left"
+            footerRight="$28"
+            onClick={handleCardClick}
+          />
           {/* Add more cards as needed */}
         </div>
       </main>

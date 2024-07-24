@@ -1,67 +1,35 @@
 .card {
-    background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    background-color: white;
+    border-radius: 8px;
     padding: 20px;
-    margin: 10px;
-    width: 250px; /* Adjust the width as needed */
-    transition: box-shadow 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 250px;
+    cursor: pointer;
+    transition: transform 0.2s;
   }
   
   .card:hover {
-    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
-  }
-  
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    transform: translateY(-10px);
   }
   
   .card-icon {
-    font-size: 1.5em; /* Adjust the size as needed */
+    font-size: 24px;
+    margin-bottom: 10px;
   }
   
-  .card-menu {
-    cursor: pointer;
-    font-size: 1.2em;
-    color: #ccc;
-  }
-  
-  .card-content h3 {
-    margin: 10px 0 5px;
-    font-size: 1.2em;
-  }
-  
-  .card-content p {
-    color: #666;
-    font-size: 0.9em;
-    margin: 0;
+  .card h3 {
+    margin-top: 0;
   }
   
   .card-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 10px;
+    font-size: 14px;
+    color: gray;
   }
   
-  .card-info {
-    display: flex;
-    align-items: center;
-  }
-  
-  .card-days-left {
-    font-size: 0.8em;
-    color: #999;
-  }
-  
-  .card-price {
-    font-size: 1em;
-    color: #28a745; /* Adjust the color as needed */
+  .price {
+    color: #00aaff; /* Adjust color as needed */
   }
   
