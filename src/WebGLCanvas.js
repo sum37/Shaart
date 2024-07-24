@@ -467,13 +467,19 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
       const rect = canvas.getBoundingClientRect();
       let x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       let y = ((event.clientY - rect.top) / rect.height) * -2 + 1;
-
+    
       isNearPoint = false;
       let closestPoint = null;
       let closestLine = null;
       let closestCircle = null;
       let closestDistance = Infinity;
-
+      let closestEndpoints = [];
+    
+      const defaultEndpointSize = 0.006;
+      const hoverEndpointSize = 0.007;
+      const defaultIntersectionSize = 0.005;
+      const hoverIntersectionSize = 0.006;
+    
       if (!isEraserMode) {
         const allPoints = [...pointsRef.current, ...intersectionsRef.current]; // Include intersections in points check
         for (let i = 0; i < allPoints.length; i += 2) {
@@ -502,9 +508,10 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
           if (distance < magneticRadius && distance < closestDistance) {
             closestLine = [x0, y0, x1, y1];
             closestDistance = distance;
+            closestEndpoints = [x0, y0, x1, y1];
           }
         }
-
+    
         for (let i = 0; i < circlesRef.current.length; i++) {
           const [cx, cy, radius] = circlesRef.current[i];
           const distance = Math.abs(Math.sqrt((x - cx) ** 2 + (y - cy) ** 2) - radius);
@@ -514,45 +521,60 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
           }
         }
       }
-
+    
       let hoverPoint = [x, y];
-
+    
       canvas.style.cursor = isNearPoint || closestLine || closestCircle ? 'pointer' : 'default';
-
+    
       gl.clear(gl.COLOR_BUFFER_BIT);
       drawLines(linesRef.current, [0, 0, 0, 1]); // Black color for existing lines
       drawCircles(circlesRef.current, [0, 0, 0, 1]); // Redraw circles
-      drawFilledCircles(pointsRef.current, 0.005, [0, 0, 0, 1]); // Redraw points as black circles
-      drawFilledCircles(intersectionsRef.current, 0.005, [0, 0, 0, 1]); // Redraw intersections as black circles
-
+    
+      // Redraw points and intersections with default sizes
+      drawFilledCircles(pointsRef.current, defaultEndpointSize, [0, 0, 0, 1]); // Endpoints as black circles
+      drawFilledCircles(intersectionsRef.current, defaultIntersectionSize, [0, 0, 0, 1]); // Intersections as black circles
+    
+      // Change size of the closest point if near
       if (closestPoint) {
-        drawFilledCircles([closestPoint[0], closestPoint[1]], 0.005, [1, 0.5, 0, 1]); // Orange color for the closest point
+        const isIntersection = intersectionsRef.current.some(
+          (v, i) => i % 2 === 0 && v === closestPoint[0] && intersectionsRef.current[i + 1] === closestPoint[1]
+        );
+        const size = isIntersection ? hoverIntersectionSize : hoverEndpointSize;
+        drawFilledCircles([closestPoint[0], closestPoint[1]], size, [0, 0, 0, 1]);
       }
-
+    
       if (closestLine) {
-        drawLines(closestLine, [0, 1, 0, 1]); // Green color for the nearest line
+        drawLines(closestLine, [142 / 255, 61 / 255, 255 / 255, 1]); // Purple color for the nearest line
+        drawFilledCircles(
+          [closestEndpoints[0], closestEndpoints[1], closestEndpoints[2], closestEndpoints[3]],
+          hoverEndpointSize,
+          [142 / 255, 61 / 255, 255 / 255, 1]
+        ); // Increase size and purple color for the line's endpoints
       }
-
+    
       if (closestCircle) {
-        drawCircles([closestCircle], [0, 1, 0, 1]); // Green color for the nearest circle
+        drawCircles([closestCircle], [142 / 255, 61 / 255, 255 / 255, 1]); // Purple color for the nearest circle
+        drawFilledCircles([closestCircle[0], closestCircle[1]], hoverEndpointSize, [142 / 255, 61 / 255, 255 / 255, 1]); // Increase size and purple color for the circle's center
       }
-
+    
       if (isCircleMode && currentCircleRef.current.length === 2) {
         const [cx, cy] = currentCircleRef.current;
         const radius = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
         drawDashedCircle(cx, cy, radius, [0, 0, 1, 1]); // Blue dashed circle
-
+    
         // Render the radius
         renderText(`Radius: ${radius.toFixed(2)}`, event.clientX, event.clientY - 10);
       } else if (!isCircleMode && hoverPoint && currentLineRef.current.length === 2) {
         const [startX, startY] = currentLineRef.current;
         drawDashedLine(startX, startY, hoverPoint[0], hoverPoint[1], [0, 0, 1, 1]); // Blue dashed line
-
+    
         // Calculate and render the line length if a line is being drawn
         const length = calculateDistance(startX, startY, x, y);
         renderText(`Length: ${length.toFixed(2)}`, event.clientX, event.clientY - 10);
       }
     };
+    
+    
 
     const handleClick = (event) => {
       const rect = canvas.getBoundingClientRect();
@@ -607,8 +629,9 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
             removePoint(startX, startY);
             removePoint(endX, endY);
           } else if (closestShape.type === 'circle') {
-            circlesRef.current.splice(closestShape.index, 1);
+            const [cx, cy, radius] = circlesRef.current.splice(closestShape.index, 1)[0];
             removeIntersections(`circle:${closestShape.index}`);
+            removePoint(cx, cy); // Remove the center point of the circle
           }
           findIntersections();
         }
@@ -628,9 +651,9 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
       } else {
         if (currentLineRef.current.length === 0) {
           currentLineRef.current.push(x, y);
+          pointsRef.current.push(x, y); // Add the starting point to points array
         } else {
-          pointsRef.current.push(...currentLineRef.current);
-          pointsRef.current.push(x, y);
+          pointsRef.current.push(x, y); // Add the ending point to points array
           currentLineRef.current.push(x, y);
           isAnimatingRef.current = true;
 
