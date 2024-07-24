@@ -5,6 +5,7 @@ import './DashboardPage.css';
 import Card from './Card';
 import { useAuth } from './authContext';
 import myimg from './assets/su.png';
+import mathimg from './math.png';
 
 const DashboardPage = () => {
   const navigate = useNavigate();
@@ -28,6 +29,10 @@ const DashboardPage = () => {
         </button>
       </header>
       <header className="dashboard-header">
+        
+        <div className="image-container">
+          <img src={mathimg} alt="Main Visual" />
+        </div>
         <h1>시작하세요, 작도</h1>
         <p>차례차례 문제를 풀어보세요. 귀하의 공간지각능력을 키워보세요 😊</p>
       </header>
