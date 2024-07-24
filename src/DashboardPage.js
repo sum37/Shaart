@@ -5,6 +5,9 @@ import './DashboardPage.css';
 import Card from './Card';
 import { useAuth } from './authContext';
 import myimg from './assets/su.png';
+import triangle from './assets/triangle.png';
+import seven from './assets/seven.png';
+import two__angle from './assets/angle_two.png';
 import mathimg from './math.png';
 
 const DashboardPage = () => {
@@ -41,51 +44,36 @@ const DashboardPage = () => {
           <Card
             image={myimg}
             title="수선의 발"
-            description="임의의 선분이 주어졌을 때 선분의 수선을 작도하세요"
+            description="임의의 선분이 주어졌을 때 선분의 수선을 작도하세요."
             footerLeft="난이도 하"
             footerRight="미해결"
             onClick={handleCardClick}
           />
           <Card
-            image={myimg}
-            title="수선의 발"
-            description="임의의 선분이 주어졌을 때 선분의 수선을 작도하세요"
+            image={two__angle}
+            title="각의 이등분 선"
+            description="임의의 각을 이등분 하는 선을 작도하세요."
             footerLeft="난이도 하"
             footerRight="미해결"
             onClick={handleCardClick}
           />
           <Card
-            image={myimg}
-            title="수선의 발"
-            description="임의의 선분이 주어졌을 때 선분의 수선을 작도하세요"
+            image={triangle}
+            title="정삼각형"
+            description="주어진 선분을 한 변으로 하는 정삼각형을 작도하세요."
             footerLeft="난이도 하"
             footerRight="미해결"
             onClick={handleCardClick}
           />
           <Card
-            image={myimg}
-            title="수선의 발"
-            description="임의의 선분이 주어졌을 때 선분의 수선을 작도하세요"
-            footerLeft="난이도 하"
+            image={seven}
+            title="정칠각형"
+            description="주어진 선분을 한 변으로 하는 정칠각형을 작도하세요."
+            footerLeft="난이도 상"
             footerRight="미해결"
             onClick={handleCardClick}
           />
-          <Card
-            image={myimg}
-            title="수선의 발"
-            description="임의의 선분이 주어졌을 때 선분의 수선을 작도하세요"
-            footerLeft="난이도 하"
-            footerRight="미해결"
-            onClick={handleCardClick}
-          />
-          <Card
-            image={myimg}
-            title="수선의 발"
-            description="임의의 선분이 주어졌을 때 선분의 수선을 작도하세요"
-            footerLeft="난이도 하"
-            footerRight="미해결"
-            onClick={handleCardClick}
-          />
+        
           {/* Add more cards as needed */}
         </div>
       </main>

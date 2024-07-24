@@ -14,13 +14,20 @@
 }
 
 .card-image {
-  margin-bottom: 10px;
+  margin-bottom: 20px;
+  height: 240px;
+  background-color: #FFFFFF;
+  border-radius: 15px;
+  display:block;
+  justify-content: center;
+  box-shadow: 4px 4px 8px #C8C9CE, -4px -4px 8px #FFFFFF;
 }
 
 .card-image img {
-  width: 100%;
-  border-radius: 15px;
-  box-shadow: 4px 4px 8px #C8C9CE, -4px -4px 8px #FFFFFF; /* Neomorphic shadow for image */
+  padding-top: 10px;
+  width: 80%;
+  
+   /* Neomorphic shadow for image */
 }
 
 .card h3 {
