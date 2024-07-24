@@ -43,7 +43,7 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
       drawLines(linesRef.current, [0, 0, 0, 1]); // Redraw existing lines
       drawCircles(circlesRef.current, [0, 0, 0, 1]); // Redraw circles
       drawFilledCircles(pointsRef.current, 0.005, [0, 0, 0, 1]); // Draw points as black circles
-      drawFilledCircles(intersectionsRef.current, 0.005, [0, 0, 0, 1]); // Draw intersections as black circles
+      drawFilledCircles(intersectionsRef.current, 0.004, [0, 0, 0, 1]); // Draw intersections as black circles
     };
 
     const drawFilledCircles = (points, radius, color) => {
@@ -122,7 +122,7 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
         drawLines(linesRef.current, [0, 0, 0, 1]); // Black color for existing lines
         drawCircles(circlesRef.current, [0, 0, 0, 1]); // Redraw circles
         drawFilledCircles(pointsRef.current, 0.005, [0, 0, 0, 1]); // Redraw points as black circles
-        drawFilledCircles(intersectionsRef.current, 0.005, [0, 0, 0, 1]); // Redraw intersections as black circles
+        drawFilledCircles(intersectionsRef.current, 0.004, [0, 0, 0, 1]); // Redraw intersections as black circles
 
         const circlePoints = [];
         for (let i = 0; i <= progress; i++) {
@@ -433,7 +433,7 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
             }
           }
         }
-        drawFilledCircles(tempIntersections, 0.005, [0, 0, 0, 1]); // Black circles for intersections
+        drawFilledCircles(tempIntersections, 0.004, [0, 0, 0, 1]); // Black circles for intersections
 
         if (progress < steps) {
           requestAnimationFrame(step);
