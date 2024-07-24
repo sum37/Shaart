@@ -1,3 +1,4 @@
+// DashboardPage.js
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BiLogOut } from "react-icons/bi";
@@ -14,8 +15,8 @@ const DashboardPage = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
 
-  const handleCardClick = () => {
-    navigate('/webglcanvas'); // Navigate to WebGLCanvas page
+  const handleCardClick = (id) => {
+    navigate(`/webglcanvas/${id}`); // Navigate to WebGLCanvas page with the id
   };
 
   const handleLogout = () => {
@@ -32,7 +33,6 @@ const DashboardPage = () => {
         </button>
       </header>
       <header className="dashboard-header">
-        
         <div className="image-container">
           <img src={mathimg} alt="Main Visual" />
         </div>
@@ -42,6 +42,7 @@ const DashboardPage = () => {
       <main>
         <div className="card-container">
           <Card
+            id={1}
             image={myimg}
             title="수선의 발"
             description="임의의 선분이 주어졌을 때 선분의 수선을 작도하세요."
@@ -50,6 +51,7 @@ const DashboardPage = () => {
             onClick={handleCardClick}
           />
           <Card
+            id={2}
             image={two__angle}
             title="각의 이등분 선"
             description="임의의 각을 이등분 하는 선을 작도하세요."
@@ -58,6 +60,7 @@ const DashboardPage = () => {
             onClick={handleCardClick}
           />
           <Card
+            id={3}
             image={triangle}
             title="정삼각형"
             description="주어진 선분을 한 변으로 하는 정삼각형을 작도하세요."
@@ -66,6 +69,7 @@ const DashboardPage = () => {
             onClick={handleCardClick}
           />
           <Card
+            id={4}
             image={seven}
             title="정칠각형"
             description="주어진 선분을 한 변으로 하는 정칠각형을 작도하세요."
@@ -73,7 +77,6 @@ const DashboardPage = () => {
             footerRight="미해결"
             onClick={handleCardClick}
           />
-        
           {/* Add more cards as needed */}
         </div>
       </main>

@@ -20,7 +20,7 @@ const distance = (x1, y1, x2, y2) => {
 };
 
 const isTriangle = (lines) => {
-  if(lines.length != 12) return false;
+  if(lines.length !== 12) return false;
 
   const line1 = distance(lines[0], lines[1], lines[2], lines[3]);
   const line2 = distance(lines[4], lines[5], lines[6], lines[7]);
@@ -28,9 +28,8 @@ const isTriangle = (lines) => {
 
   console.log(line1, line2, line3);
 
-  if (line1 == line2 && line1 == line3 && line2 == line3) return true;
+  if (line1 === line2 && line1 === line3 && line2 === line3) return true;
 
-  
   return false;
 };
 
@@ -40,8 +39,6 @@ const App = () => {
   const [isLineMode, setLineMode] = useState(false);
   const [activeButton, setActiveButton] = useState('');
   const navigate = useNavigate();
-
-  
 
   const handleClick = (action) => {
     console.log(`Button ${action} clicked`);
@@ -80,7 +77,6 @@ const App = () => {
         const isTriangleFormed = isTriangle(lines);
         if (isTriangleFormed) {
           alert('The shapes form a triangle.');
-          
         } else {
           alert('The shapes do not form a triangle.');
         }
@@ -92,15 +88,13 @@ const App = () => {
         // } else {
         //   alert('이등분안함');
         // }
-
-
       } else {
         console.log('Submission canceled');
       }
     }
   };
 
-  const shouldShowToolbar = ['/webglcanvas'].includes(window.location.pathname);
+  const shouldShowToolbar = window.location.pathname.startsWith('/webglcanvas');
 
   return (
     <div className="App">
@@ -108,7 +102,7 @@ const App = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/dashboard" element={<PrivateRoute element={<DashboardPage />} />} />
-        <Route path="/webglcanvas" element={<PrivateRoute element={<WebGLCanvas isLineMode={isLineMode} isEraserMode={isEraserMode} isCircleMode={isCircleMode} />} />} />
+        <Route path="/webglcanvas/:id" element={<PrivateRoute element={<WebGLCanvas isLineMode={isLineMode} isEraserMode={isEraserMode} isCircleMode={isCircleMode} />} />} />
         <Route path="/" element={<Navigate to="/dashboard" />} />
       </Routes>
 

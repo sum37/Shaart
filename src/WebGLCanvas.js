@@ -1,4 +1,6 @@
+// WebGLCanvas.js
 import React, { useEffect, useRef } from 'react';
+import { useParams } from 'react-router-dom';
 
 export const WebGLCanvasRefs = {
   pointsRef: [],
@@ -7,6 +9,7 @@ export const WebGLCanvasRefs = {
 };
 
 const WebGLCanvas = ({ isLineMode, isEraserMode, isCircleMode }) => {
+  const { id } = useParams(); // Get the ID from the URL
   const canvasRef = useRef(null);
   const textCanvasRef = useRef(null); // Ref for the second canvas for text
   const pointsRef = useRef([]); // Store points' coordinates
@@ -25,6 +28,9 @@ const WebGLCanvas = ({ isLineMode, isEraserMode, isCircleMode }) => {
   const magneticRadius = 0.02;
 
   useEffect(() => {
+    // Use the ID parameter for any initialization logic
+    console.log("Received ID:", id);
+
     // Disable scrolling
     document.body.style.overflow = 'hidden';
     document.documentElement.style.overflow = 'hidden';
@@ -739,7 +745,7 @@ const WebGLCanvas = ({ isLineMode, isEraserMode, isCircleMode }) => {
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('click', handleClick);
     };
-  }, [isLineMode, isEraserMode, isCircleMode]);
+  }, [isLineMode, isEraserMode, isCircleMode, id]);
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
