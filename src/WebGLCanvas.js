@@ -5,7 +5,8 @@ import { useParams } from 'react-router-dom';
 export const WebGLCanvasRefs = {
   pointsRef: [],
   linesRef: [],
-  circlesRef: []
+  circlesRef: [],
+  id: 0,
 };
 
 const WebGLCanvas = ({ isLineMode, isEraserMode, isCircleMode }) => {
@@ -24,6 +25,7 @@ const WebGLCanvas = ({ isLineMode, isEraserMode, isCircleMode }) => {
   WebGLCanvasRefs.pointsRef = pointsRef.current;
   WebGLCanvasRefs.linesRef = linesRef.current;
   WebGLCanvasRefs.circlesRef = circlesRef.current;
+  WebGLCanvasRefs.id = id;
 
   const magneticRadius = 0.02;
 
