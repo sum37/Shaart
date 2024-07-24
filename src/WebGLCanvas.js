@@ -560,13 +560,13 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
       if (isCircleMode && currentCircleRef.current.length === 2) {
         const [cx, cy] = currentCircleRef.current;
         const radius = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
-        drawDashedCircle(cx, cy, radius, [0, 0, 1, 1]); // Blue dashed circle
+        drawDashedCircle(cx, cy, radius, [142 / 255, 61 / 255, 255 / 255, 1]); // Blue dashed circle
     
         // Render the radius
         renderText(`Radius: ${radius.toFixed(2)}`, event.clientX, event.clientY - 10);
       } else if (!isCircleMode && hoverPoint && currentLineRef.current.length === 2) {
         const [startX, startY] = currentLineRef.current;
-        drawDashedLine(startX, startY, hoverPoint[0], hoverPoint[1], [0, 0, 1, 1]); // Blue dashed line
+        drawDashedLine(startX, startY, hoverPoint[0], hoverPoint[1], [142 / 255, 61 / 255, 255 / 255, 1]); // Blue dashed line
     
         // Calculate and render the line length if a line is being drawn
         const length = calculateDistance(startX, startY, x, y);
