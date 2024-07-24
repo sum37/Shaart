@@ -1,100 +1,124 @@
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-  
-  .login-page {
-    text-align: center;
-    background-color: #f5f5f5;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .login-header {
-    background-color: #fff;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .login-header h1 {
-    margin: 0;
-    font-size: 24px;
-  }
-  
-  .login-header nav ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    gap: 20px;
-  }
-  
-  .login-header nav ul li {
-    display: inline;
-  }
-  
-  .login-header nav ul li a {
-    text-decoration: none;
-    color: #333;
-    font-size: 16px;
-  }
-  
-  .login-container {
-    max-width: 600px;
-    margin: 50px auto;
-    padding: 20px;
-    background-color: #fff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
-  }
-  
-  .login-container h2 {
-    font-size: 28px;
-    margin-bottom: 20px;
-  }
-  
-  .login-container p {
-    font-size: 16px;
-    color: #666;
-    margin-bottom: 30px;
-  }
-  
-  .login-container form {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .login-container input {
-    padding: 10px;
-    font-size: 16px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
-  
-  .login-container button {
-    padding: 10px;
-    font-size: 16px;
-    background-color: #6200ea;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  .login-container button:hover {
-    background-color: #3700b3;
-  }
-  
-  .error-message {
-    color: red;
-    font-size: 14px;
-    margin-top: 10px;
-  }
-  
+.login-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-size: cover;
+  background-position: center;
+  padding: 0 50px; /* 화면의 왼쪽과 오른쪽에 padding 추가 */
+}
+.left-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* 왼쪽 정렬을 강화 */
+  justify-content: center;
+  padding-left: 50px; /* 좌측 여백 추가 */
+  width: 100%; /* 확실한 너비 설정 */
+}
+
+.brand-container {
+  position: relative;
+  padding-left: 30px; /* 막대기와 텍스트 사이 간격 조정 */
+  text-align: left; /* 텍스트 왼쪽 정렬 */
+  margin-bottom: 60px;
+  width: 100%; /* 전체 너비 사용 */
+}
+
+.brand-container h1 {
+  font-size: 60px; /* 크기 조정 */
+  margin: 0; /* 마진 제거 */
+  color: #333;
+  margin-bottom: 30px;
+  transition: color 0.3s ease, transform 0.3s ease; /* 트랜지션 효과 추가 */
+  text-shadow: 3px 3px 6px rgba(0,0,0,0.25); /* 드롭 쉐도우 거리 및 강도 조정 */
+}
+
+.brand-container h1:hover {
+  color: #8e3dff; /* 호버 시 색상 변경 */
+  transform: scale(1.05); /* 약간 확대 */
+}
+
+.brand-container p {
+  margin: 5px 0 0 0; /* 상단 마진 조정 */
+  color: #333;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.15); /* p 태그의 드롭 쉐도우 조정 */
+}
+
+.brand-container .bar {
+  position: absolute;
+  left: 0; /* 왼쪽으로 정렬 */
+  top: 0;
+  bottom: 0;
+  width: 5px; /* 막대기 너비 */
+  background-color: #000; /* 막대기 색상 */
+}
+
+.login-container {
+  background: #F2F2F2;
+  border-radius: 15px;
+  box-shadow: 8px 8px 16px #C8C9CE, -8px -8px 16px #FFFFFF;
+  padding: 20px;
+  width: 300px; /* 고정 너비 */
+  margin-bottom: 20px; /* 컨테이너 간 간격 */
+}
+
+.image-container {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-container img {
+  width: 60%;
+  height: auto;
+  border-radius: 15px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease; /* 이미지 트랜지션 효과 */
+  display: block; /* 이미지가 block 요소인 경우에만 transform 적용 가능 */
+}
+
+.image-container img:hover {
+  transform: scale(1.1); /* 이미지 확대 */
+}
+
+
+.login-container {
+  background: #F2F2F2;
+  border-radius: 15px;
+  box-shadow: 8px 8px 16px #C8C9CE, -8px -8px 16px #FFFFFF;
+  padding: 20px;
+  width: 300px; /* 고정 너비 */
+  margin-bottom: 20px; /* 컨테이너 간 간격 */
+}
+
+
+
+input, button {
+  width: 100%;
+  padding: 10px 15px; /* 좌우 패딩을 15px로 조정 */
+  margin: 10px 0;
+  background: #F2F2F2;
+  border: none;
+  border-radius: 15px;
+  box-shadow: inset 5px 5px 10px #C8C9CE, inset -5px -5px 10px #FFFFFF;
+  outline: none;
+  color: #525252;
+  box-sizing: border-box; /* 패딩이 너비에 포함되도록 설정 */
+}
+
+button {
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 4px 4px 8px #C8C9CE, -4px -4px 8px #FFFFFF;
+  transition: background-color 0.3s;
+  padding: 10px 15px; /* 버튼의 좌우 패딩도 동일하게 조정 */
+}
+
+button:hover {
+  background-color: #D1D3D8;
+}
+
+.error-message {
+  color: #b00020;
+  text-align: center;
+}

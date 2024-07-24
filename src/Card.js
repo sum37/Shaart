@@ -1,23 +1,18 @@
 import React from 'react';
 import './Card.css';
 
-const Card = ({ icon, title, description, price, daysLeft }) => {
+const Card = ({ image, title, description, footerLeft, footerRight, onClick }) => {
   return (
-    <div className="card">
-      <div className="card-header">
-        <div className="card-icon">{icon}</div>
-        <div className="card-menu">...</div>
+    <div className="card" onClick={onClick}>
+      <div className="card-image">
+        <img src={image} alt={title} />
       </div>
-      <div className="card-content">
-        <h3>{title}</h3>
-        <p>{description}</p>
-      </div>
-      <div className="card-footer">
-        <div className="card-info">
-          <span className="card-days-left">{daysLeft} days left</span>
-        </div>
-        <div className="card-price">{price}</div>
-      </div>
+      <h3>{title}</h3>
+      <p>{description}</p>
+      <p className="card-footer">
+        <span>{footerLeft}</span>
+        <span className="price">{footerRight}</span>
+      </p>
     </div>
   );
 };
