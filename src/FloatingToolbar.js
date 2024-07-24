@@ -9,6 +9,7 @@ const FloatingToolbar = ({ handleClick }) => {
       <button onClick={() => handleClick('Home')}><LineIcon /></button>
       <button onClick={() => handleClick('Circle')}><CircleIcon /></button>
       <button onClick={() => handleClick('Eraser')}><BiSolidEraser /></button>
+      <button onClick={() => handleClick('Submit')}><LineIcon /></button>
       <button onClick={() => handleClick('Logout')}><BiLogOut /></button>
     </div>
   );

@@ -1,6 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 
-const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
+export const WebGLCanvasRefs = {
+  pointsRef: [],
+  linesRef: [],
+  circlesRef: []
+};
+
+const WebGLCanvas = ({ isLineMode, isEraserMode, isCircleMode }) => {
   const canvasRef = useRef(null);
   const textCanvasRef = useRef(null); // Ref for the second canvas for text
   const pointsRef = useRef([]); // Store points' coordinates
@@ -12,9 +18,17 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
   const currentCircleRef = useRef([]);
   const isAnimatingRef = useRef(false);
 
+  WebGLCanvasRefs.pointsRef = pointsRef.current;
+  WebGLCanvasRefs.linesRef = linesRef.current;
+  WebGLCanvasRefs.circlesRef = circlesRef.current;
+
   const magneticRadius = 0.02;
 
   useEffect(() => {
+    // Disable scrolling
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+
     const canvas = canvasRef.current;
     const textCanvas = textCanvasRef.current;
     const gl = canvas.getContext('webgl');
@@ -105,15 +119,16 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
       }
     };
 
-    const animateCircle = (cx, cy, radius) => {
+    const animateCircle = (cx, cy, radius, startX, startY) => {
       const segments = 100;
       const angleStep = (Math.PI * 2) / segments;
       let progress = 0;
+      const startAngle = Math.atan2(startY - cy, startX - cx); // Calculate start angle based on click position
 
       const step = () => {
         progress++;
         const t = progress / segments;
-        const angle = t * 2 * Math.PI;
+        const angle = startAngle + t * 2 * Math.PI;
         const x = cx + radius * Math.cos(angle);
         const y = cy + radius * Math.sin(angle);
 
@@ -126,7 +141,7 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
 
         const circlePoints = [];
         for (let i = 0; i <= progress; i++) {
-          const angle = i * angleStep;
+          const angle = startAngle + i * angleStep;
           const x = cx + radius * Math.cos(angle);
           const y = cy + radius * Math.sin(angle);
           circlePoints.push(x, y);
@@ -467,19 +482,19 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
       const rect = canvas.getBoundingClientRect();
       let x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       let y = ((event.clientY - rect.top) / rect.height) * -2 + 1;
-    
+
       isNearPoint = false;
       let closestPoint = null;
       let closestLine = null;
       let closestCircle = null;
       let closestDistance = Infinity;
       let closestEndpoints = [];
-    
+
       const defaultEndpointSize = 0.005;
       const hoverEndpointSize = 0.007;
       const defaultIntersectionSize = 0.004;
       const hoverIntersectionSize = 0.006;
-    
+
       if (!isEraserMode) {
         const allPoints = [...pointsRef.current, ...intersectionsRef.current]; // Include intersections in points check
         for (let i = 0; i < allPoints.length; i += 2) {
@@ -511,7 +526,7 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
             closestEndpoints = [x0, y0, x1, y1];
           }
         }
-    
+
         for (let i = 0; i < circlesRef.current.length; i++) {
           const [cx, cy, radius] = circlesRef.current[i];
           const distance = Math.abs(Math.sqrt((x - cx) ** 2 + (y - cy) ** 2) - radius);
@@ -521,19 +536,19 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
           }
         }
       }
-    
+
       let hoverPoint = [x, y];
-    
+
       canvas.style.cursor = isNearPoint || closestLine || closestCircle ? 'pointer' : 'default';
-    
+
       gl.clear(gl.COLOR_BUFFER_BIT);
       drawLines(linesRef.current, [0, 0, 0, 1]); // Black color for existing lines
       drawCircles(circlesRef.current, [0, 0, 0, 1]); // Redraw circles
-    
+
       // Redraw points and intersections with default sizes
       drawFilledCircles(pointsRef.current, defaultEndpointSize, [0, 0, 0, 1]); // Endpoints as black circles
       drawFilledCircles(intersectionsRef.current, defaultIntersectionSize, [0, 0, 0, 1]); // Intersections as black circles
-    
+
       // Change size of the closest point if near
       if (closestPoint) {
         const isIntersection = intersectionsRef.current.some(
@@ -542,7 +557,7 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
         const size = isIntersection ? hoverIntersectionSize : hoverEndpointSize;
         drawFilledCircles([closestPoint[0], closestPoint[1]], size, [0, 0, 0, 1]);
       }
-    
+
       if (closestLine) {
         drawLines(closestLine, [142 / 255, 61 / 255, 255 / 255, 1]); // Purple color for the nearest line
         drawFilledCircles(
@@ -551,31 +566,28 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
           [142 / 255, 61 / 255, 255 / 255, 1]
         ); // Increase size and purple color for the line's endpoints
       }
-    
+
       if (closestCircle) {
         drawCircles([closestCircle], [142 / 255, 61 / 255, 255 / 255, 1]); // Purple color for the nearest circle
         drawFilledCircles([closestCircle[0], closestCircle[1]], hoverEndpointSize, [142 / 255, 61 / 255, 255 / 255, 1]); // Increase size and purple color for the circle's center
       }
-    
+
       if (isCircleMode && currentCircleRef.current.length === 2) {
         const [cx, cy] = currentCircleRef.current;
         const radius = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
         drawDashedCircle(cx, cy, radius, [142 / 255, 61 / 255, 255 / 255, 1]); // Blue dashed circle
-    
+
         // Render the radius
         renderText(`Radius: ${(radius * 10).toFixed(1)}`, event.clientX, event.clientY - 10);
       } else if (!isCircleMode && hoverPoint && currentLineRef.current.length === 2) {
         const [startX, startY] = currentLineRef.current;
         drawDashedLine(startX, startY, hoverPoint[0], hoverPoint[1], [142 / 255, 61 / 255, 255 / 255, 1]); // Blue dashed line
-    
+
         // Calculate and render the line length if a line is being drawn
         const length = calculateDistance(startX, startY, x, y);
         renderText(`Length: ${(length * 10).toFixed(1)}`, event.clientX, event.clientY - 10);
       }
     };
-    
-    
-    
 
     const handleClick = (event) => {
       const rect = canvas.getBoundingClientRect();
@@ -647,7 +659,7 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
 
           // Clear the text rendering context before the circle animation starts
           ctx.clearRect(0, 0, textCanvas.width, textCanvas.height);
-          animateCircle(cx, cy, radius); // Simplified circle animation call
+          animateCircle(cx, cy, radius, x, y); // Start the circle animation from the clicked point
         }
       } else {
         if (currentLineRef.current.length === 0) {
@@ -717,13 +729,17 @@ const WebGLCanvas = ({ isEraserMode, isCircleMode }) => {
 
     // Clear state when mode changes
     return () => {
+      // Re-enable scrolling when the component is unmounted
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+
       currentLineRef.current = [];
       currentCircleRef.current = [];
       window.removeEventListener('resize', resizeCanvas);
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('click', handleClick);
     };
-  }, [isEraserMode, isCircleMode]);
+  }, [isLineMode, isEraserMode, isCircleMode]);
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
