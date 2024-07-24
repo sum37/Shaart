@@ -1,35 +1,40 @@
 .card {
-    background-color: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    width: 250px;
-    cursor: pointer;
-    transition: transform 0.2s;
-  }
-  
-  .card:hover {
-    transform: translateY(-10px);
-  }
-  
-  .card-icon {
-    font-size: 24px;
-    margin-bottom: 10px;
-  }
-  
-  .card h3 {
-    margin-top: 0;
-  }
-  
-  .card-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 14px;
-    color: gray;
-  }
-  
-  .price {
-    color: #00aaff; /* Adjust color as needed */
-  }
-  
+  background-color: #f2f2f2;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 8px 8px 16px #C8C9CE, -8px -8px 16px #FFFFFF; /* Neomorphic shadow */
+  width: 250px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.3s ease-in-out;
+}
+
+.card:hover {
+  transform: translateY(-10px);
+  box-shadow: 5px 5px 10px #BEC1C6, -5px -5px 10px #FFFFFF; /* Hover effect */
+}
+
+.card-image {
+  margin-bottom: 10px;
+}
+
+.card-image img {
+  width: 100%;
+  border-radius: 15px;
+  box-shadow: 4px 4px 8px #C8C9CE, -4px -4px 8px #FFFFFF; /* Neomorphic shadow for image */
+}
+
+.card h3 {
+  margin-top: 0;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: gray;
+}
+
+.price {
+  color: #00aaff; /* Adjust color as needed */
+}

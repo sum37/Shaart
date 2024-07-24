@@ -4,6 +4,7 @@ import { BiLogOut } from "react-icons/bi";
 import './DashboardPage.css';
 import Card from './Card';
 import { useAuth } from './authContext';
+import myimg from './assets/su.png';
 
 const DashboardPage = () => {
   const navigate = useNavigate();
@@ -20,64 +21,64 @@ const DashboardPage = () => {
   return (
     <div className="dashboard-page">
       <header className="top-bar">
-        <div className="brand">Shaart</div>
+        <div className="brand">SHA-ART</div>
         <button className="logout-button" onClick={handleLogout}>
           <BiLogOut />
           Logout
         </button>
       </header>
       <header className="dashboard-header">
-        <h1>Hello Daniel</h1>
-        <p>Do you already know what you will design today? Choose a project to get inspired 😊</p>
+        <h1>시작하세요, 작도</h1>
+        <p>차례차례 문제를 풀어보세요. 귀하의 공간지각능력을 키워보세요 😊</p>
       </header>
       <main>
         <div className="card-container">
           <Card
-            icon="&#128736;"
-            title="Training course"
-            description="Improve students' ability level through training courses."
-            footerLeft="2 days left"
-            footerRight="$36"
+            image={myimg}
+            title="수선의 발"
+            description="임의의 선분이 주어졌을 때 선분의 수선을 작도하세요"
+            footerLeft="난이도 하"
+            footerRight="미해결"
             onClick={handleCardClick}
           />
           <Card
-            icon="&#127916;"
-            title="Live course"
-            description="Improve students' ability level through live courses."
-            footerLeft="3 days left"
-            footerRight="-$28"
+            image={myimg}
+            title="수선의 발"
+            description="임의의 선분이 주어졌을 때 선분의 수선을 작도하세요"
+            footerLeft="난이도 하"
+            footerRight="미해결"
             onClick={handleCardClick}
           />
           <Card
-            icon="&#128249;"
-            title="Video course"
-            description="Improve students' ability level through video courses."
-            footerLeft="3 days left"
-            footerRight="$15"
+            image={myimg}
+            title="수선의 발"
+            description="임의의 선분이 주어졌을 때 선분의 수선을 작도하세요"
+            footerLeft="난이도 하"
+            footerRight="미해결"
             onClick={handleCardClick}
           />
           <Card
-            icon="&#127909;"
-            title="Radio course"
-            description="Improve students' ability through single-choice courses."
-            footerLeft="2 days left"
-            footerRight="$18"
+            image={myimg}
+            title="수선의 발"
+            description="임의의 선분이 주어졌을 때 선분의 수선을 작도하세요"
+            footerLeft="난이도 하"
+            footerRight="미해결"
             onClick={handleCardClick}
           />
           <Card
-            icon="&#128221;"
-            title="Package course"
-            description="Improve students' abilities through package courses."
-            footerLeft="3 days left"
-            footerRight="-$25"
+            image={myimg}
+            title="수선의 발"
+            description="임의의 선분이 주어졌을 때 선분의 수선을 작도하세요"
+            footerLeft="난이도 하"
+            footerRight="미해결"
             onClick={handleCardClick}
           />
           <Card
-            icon="&#128214;"
-            title="Other course"
-            description="Improve students' abilities through other courses."
-            footerLeft="3 days left"
-            footerRight="$28"
+            image={myimg}
+            title="수선의 발"
+            description="임의의 선분이 주어졌을 때 선분의 수선을 작도하세요"
+            footerLeft="난이도 하"
+            footerRight="미해결"
             onClick={handleCardClick}
           />
           {/* Add more cards as needed */}
