@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Route, Routes, Navigate, useNavigate } from 'react-router-dom';
 import WebGLCanvas, { WebGLCanvasRefs } from './WebGLCanvas';
 import LoginPage from './LoginPage';
@@ -12,7 +12,7 @@ import { BiSolidEraser } from "react-icons/bi";
 
 const PrivateRoute = ({ element }) => {
   const { isAuthenticated } = useAuth();
-  return element;
+  return isAuthenticated ? element : <Navigate to="/login" />;
 };
 
 const distance = (x1, y1, x2, y2) => {
@@ -38,7 +38,15 @@ const App = () => {
   const [isCircleMode, setCircleMode] = useState(false);
   const [isLineMode, setLineMode] = useState(false);
   const [activeButton, setActiveButton] = useState('');
+  const [username, setUsername] = useState('');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const storedUsername = localStorage.getItem('username');
+    if (storedUsername) {
+      setUsername(storedUsername);
+    }
+  }, []);
 
   const handleClick = (action) => {
     console.log(`Button ${action} clicked`);
@@ -98,6 +106,7 @@ const App = () => {
 
   return (
     <div className="App">
+      <div className="username-display">Welcome, {username}!</div> {/* Display the username */}
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />

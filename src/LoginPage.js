@@ -27,6 +27,7 @@ const LoginPage = () => {
       if (response.status === 200) {
         localStorage.setItem('access_token', response.data.access);
         localStorage.setItem('refresh_token', response.data.refresh);
+        localStorage.setItem('username', response.data.username); // Store the username
         login();
         navigate('/dashboard');
       } else {
