@@ -8,7 +8,7 @@ import { useAuth } from './authContext';
 import './App.css';
 import { ReactComponent as LineIcon } from './assets/line.svg';
 import { ReactComponent as CircleIcon } from './assets/circle.svg';
-import { BiSolidEraser } from "react-icons/bi";
+import { BiSolidEraser,BiCheck } from "react-icons/bi";
 
 const PrivateRoute = ({ element }) => {
   const { isAuthenticated } = useAuth();
@@ -232,7 +232,7 @@ const App = () => {
             onClick={() => handleClick('Submit')}
             className={activeButton === 'Submit' ? 'active' : ''}
           >
-            Submit
+            <BiCheck />
           </button>
         </div>
       )}
