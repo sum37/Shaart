@@ -8,7 +8,8 @@ import { useAuth } from './authContext';
 import './App.css';
 import { ReactComponent as LineIcon } from './assets/line.svg';
 import { ReactComponent as CircleIcon } from './assets/circle.svg';
-import { BiSolidEraser,BiCheck } from "react-icons/bi";
+import { BiSolidEraser, BiCheck } from "react-icons/bi";
+
 
 const PrivateRoute = ({ element }) => {
   const { isAuthenticated } = useAuth();
@@ -61,22 +62,27 @@ const isBisector = (lines) => {
   console.log(angle1, angle2, angle3);
 
   const maxAngle = Math.max(angle1, angle2, angle3);
-
-  let otherAnglesSum;
-  if (maxAngle === angle1) {
-    return Math.floor(2 * angle2) === Math.floor(angle1) && Math.floor(2 * angle3) === Math.floor(angle1);
-  } else if (maxAngle === angle2) {
-    return Math.floor(2 * angle1) === Math.floor(angle2) && Math.floor(2 * angle3) === Math.floor(angle2);
+  console.log(maxAngle);
+  if (maxAngle == angle1) {
+    console.log("angle1")
+    return Math.floor(angle2) === Math.floor(angle3);
+  } else if (maxAngle == angle2) {
+    console.log("angle2")
+    return Math.floor(angle1) === Math.floor(angle3);
   } else {
-    return Math.floor(2 * angle2) === Math.floor(angle3) && Math.floor(2 * angle1) === Math.floor(angle3);
+    console.log("angle3")
+    return Math.floor(angle1) === Math.floor(angle2);
   }
+  
+
 };
 
 const isPerpendicular = (lines) => {
   if (lines.length !== 8) return false;
   const angle1 = angle(lines[0], lines[1], lines[2], lines[3], lines[4], lines[5], lines[6], lines[7]);
 
-  return angle1 == 90;
+  if (angle1 == 90) return true;
+  return false;
 };
 
 const isHexagon = (lines) => {
@@ -110,6 +116,7 @@ const App = () => {
   const [isLineMode, setLineMode] = useState(false);
   const [activeButton, setActiveButton] = useState('');
   const [username, setUsername] = useState('');
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -117,10 +124,24 @@ const App = () => {
     if (storedUsername) {
       setUsername(storedUsername);
     }
-  }, []);
+
+    const handleBeforeUnload = (e) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [hasUnsavedChanges]);
 
   const handleClick = (action) => {
     console.log(`Button ${action} clicked`);
+    setHasUnsavedChanges(true);
     if (action === 'Eraser') {
       setEraserMode(true);
       setCircleMode(false);
@@ -185,11 +206,8 @@ const App = () => {
             alert('육각형 아님');
           }
         } else {
-
+          // Add additional shape checks here
         }
-
-
-
       } else {
         console.log('Submission canceled');
       }
@@ -203,7 +221,7 @@ const App = () => {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/dashboard" element={<PrivateRoute element={<DashboardPage username={username} />} />} />
+        <Route path="/dashboard" element={<PrivateRoute element={<DashboardPage />} />} />
         <Route path="/webglcanvas/:id" element={<PrivateRoute element={<WebGLCanvas isLineMode={isLineMode} isEraserMode={isEraserMode} isCircleMode={isCircleMode} />} />} />
         <Route path="/" element={<Navigate to="/dashboard" />} />
       </Routes>
