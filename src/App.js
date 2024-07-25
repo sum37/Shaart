@@ -8,7 +8,10 @@ import { useAuth } from './authContext';
 import './App.css';
 import { ReactComponent as LineIcon } from './assets/line.svg';
 import { ReactComponent as CircleIcon } from './assets/circle.svg';
-import { BiSolidEraser } from "react-icons/bi";
+import { BiSolidEraser, BiCheck } from "react-icons/bi";
+import axios from 'axios';
+
+const backendUrl = process.env.REACT_APP_BACKEND_URL;
 
 const PrivateRoute = ({ element }) => {
   const { isAuthenticated } = useAuth();
@@ -62,16 +65,19 @@ const isBisector = (lines) => {
   console.log(angle1, angle2, angle3);
 
   const maxAngle = Math.max(angle1, angle2, angle3);
+  const tolerance = 2; // tolerance in degrees
 
-  let otherAnglesSum;
+  const withinTolerance = (a, b) => Math.abs(a - b) <= tolerance;
+
   if (maxAngle === angle1) {
-    return Math.floor(2 * angle2) === Math.floor(angle1) && Math.floor(2 * angle3) === Math.floor(angle1);
+    return withinTolerance(2 * angle2, angle1) && withinTolerance(2 * angle3, angle1);
   } else if (maxAngle === angle2) {
-    return Math.floor(2 * angle1) === Math.floor(angle2) && Math.floor(2 * angle3) === Math.floor(angle2);
+    return withinTolerance(2 * angle1, angle2) && withinTolerance(2 * angle3, angle2);
   } else {
-    return Math.floor(2 * angle2) === Math.floor(angle3) && Math.floor(2 * angle1) === Math.floor(angle3);
+    return withinTolerance(2 * angle1, angle3) && withinTolerance(2 * angle2, angle3);
   }
 };
+
 
 const isPerpendicular = (lines) => {
   if (lines.length !== 8) return false;
@@ -164,6 +170,13 @@ const App = () => {
           const isPerpendicularFormed = isPerpendicular(lines);
           if(isPerpendicularFormed) {
             alert('수직임');
+            axios.post(`${backendUrl}/api/users/${username}/add_solved_problem/`, { problem_id: 1 })
+              .then(response => {
+                console.log('Problem solved and submitted:', response.data);
+              })
+              .catch(error => {
+                console.error('There was an error submitting the solved problem:', error);
+              });
           } else{
             alert('아님');
           }
@@ -171,6 +184,13 @@ const App = () => {
           const isBisectorFormed = isBisector(lines);
           if (isBisectorFormed) {
             alert('이등분함');
+            axios.post(`${backendUrl}/api/users/${username}/add_solved_problem/`, { problem_id: 2 })
+              .then(response => {
+                console.log('Problem solved and submitted:', response.data);
+              })
+              .catch(error => {
+                console.error('There was an error submitting the solved problem:', error);
+              });
           } else {
             alert('이등분안함');
           }
@@ -178,6 +198,13 @@ const App = () => {
           const isTriangleFormed = isTriangle(lines);
           if (isTriangleFormed) {
             alert('The shapes form a triangle.');
+            axios.post(`${backendUrl}/api/users/${username}/add_solved_problem/`, { problem_id: 3 })
+              .then(response => {
+                console.log('Problem solved and submitted:', response.data);
+              })
+              .catch(error => {
+                console.error('There was an error submitting the solved problem:', error);
+              });
           } else {
             alert('The shapes do not form a triangle.');
           }
@@ -186,16 +213,19 @@ const App = () => {
           
           if(isHexagonFormed) {
             alert('육각형임');
+            axios.post(`${backendUrl}/api/users/${username}/add_solved_problem/`, { problem_id: 4 })
+              .then(response => {
+                console.log('Problem solved and submitted:', response.data);
+              })
+              .catch(error => {
+                console.error('There was an error submitting the solved problem:', error);
+              });
           } else {
             alert('육각형 아님');
           }
         } else {
           
         }
-    
-        
-
-      
       } else {
         console.log('Submission canceled');
       }
@@ -238,7 +268,7 @@ const App = () => {
             onClick={() => handleClick('Submit')}
             className={activeButton === 'Submit' ? 'active' : ''}
           >
-            Submit
+            <BiCheck />
           </button>
         </div>
       )}
