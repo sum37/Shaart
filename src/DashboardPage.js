@@ -11,7 +11,7 @@ import seven from './assets/seven.png';
 import two__angle from './assets/angle_two.png';
 import mathimg from './math.png';
 
-const DashboardPage = () => {
+const DashboardPage = ({ username }) => {
   const navigate = useNavigate();
   const { logout } = useAuth();
 
@@ -33,9 +33,6 @@ const DashboardPage = () => {
         </button>
       </header>
       <header className="dashboard-header">
-        {/* <div className="image-container">
-          <img src={mathimg} alt="Main Visual" />
-        </div> */}
         <h1>시작하세요, 작도</h1>
         <p>차례차례 문제를 풀어보세요. 귀하의 공간지각능력을 키워보세요 😊</p>
       </header>
@@ -49,6 +46,7 @@ const DashboardPage = () => {
             footerLeft="난이도 하"
             footerRight="미해결"
             onClick={handleCardClick}
+            username={username}
           />
           <Card
             id={2}
@@ -58,6 +56,7 @@ const DashboardPage = () => {
             footerLeft="난이도 하"
             footerRight="미해결"
             onClick={handleCardClick}
+            username={username}
           />
           <Card
             id={3}
@@ -67,15 +66,17 @@ const DashboardPage = () => {
             footerLeft="난이도 하"
             footerRight="미해결"
             onClick={handleCardClick}
+            username={username}
           />
           <Card
             id={4}
             image={seven}
-            title="정칠각형"
-            description="주어진 선분을 한 변으로 하는 정칠각형을 작도하세요."
-            footerLeft="난이도 상"
+            title="정육각형"
+            description="주어진 선분을 한 변으로 하는 정육각형을 작도하세요."
+            footerLeft="난이도 중"
             footerRight="미해결"
             onClick={handleCardClick}
+            username={username}
           />
           {/* Add more cards as needed */}
         </div>

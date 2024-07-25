@@ -40,9 +40,8 @@ const angle = (x1, y1, x2, y2, x3, y3, x4, y4) => {
   return angleDeg.toFixed(0);
 };
 
-
 const isTriangle = (lines) => {
-  if(lines.length !== 12) return false;
+  if (lines.length !== 12) return false;
 
   const line1 = distance(lines[0], lines[1], lines[2], lines[3]);
   const line2 = distance(lines[4], lines[5], lines[6], lines[7]);
@@ -82,11 +81,9 @@ const isBisector = (lines) => {
 const isPerpendicular = (lines) => {
   if (lines.length !== 8) return false;
   const angle1 = angle(lines[0], lines[1], lines[2], lines[3], lines[4], lines[5], lines[6], lines[7]);
-  
-  if(angle1 == 90) return true;
-  return false;
-  
-}
+
+  return angle1 == 90;
+};
 
 const isHexagon = (lines) => {
   if (lines.length !== 28) return false;
@@ -97,23 +94,21 @@ const isHexagon = (lines) => {
   const line5 = distance(lines[16], lines[17], lines[18], lines[19]);
   const line6 = distance(lines[20], lines[21], lines[22], lines[23]);
 
-
   const angle1 = angle(lines[24], lines[25], lines[26], lines[27], lines[4], lines[5], lines[6], lines[7]);
   const angle2 = angle(lines[4], lines[5], lines[6], lines[7], lines[8], lines[9], lines[10], lines[11]);
   const angle3 = angle(lines[8], lines[9], lines[10], lines[11], lines[12], lines[13], lines[14], lines[15]);
   const angle4 = angle(lines[12], lines[13], lines[14], lines[15], lines[16], lines[17], lines[18], lines[19]);
   const angle5 = angle(lines[16], lines[17], lines[18], lines[19], lines[20], lines[21], lines[22], lines[23]);
   const angle6 = angle(lines[20], lines[21], lines[22], lines[23], lines[24], lines[25], lines[26], lines[27]);
- 
 
   console.log(line1, line2, line3, line4, line5, line6);
   console.log(angle1, angle2, angle3, angle4, angle5, angle6);
 
-  const equalSixLine = (line1 == line2) && (line1 == line3) && (line1 == line4) && (line1 == line5) && (line1 == line6)
+  const equalSixLine = (line1 == line2) && (line1 == line3) && (line1 == line4) && (line1 == line5) && (line1 == line6);
   const equalSixAngle = true;
 
-  return equalSixLine && equalSixAngle
-}
+  return equalSixLine && equalSixAngle;
+};
 
 const App = () => {
   const [isEraserMode, setEraserMode] = useState(false);
@@ -168,8 +163,9 @@ const App = () => {
         // Check if the points form a triangle
         if (id == 1) {
           const isPerpendicularFormed = isPerpendicular(lines);
-          if(isPerpendicularFormed) {
+          if (isPerpendicularFormed) {
             alert('수직임');
+
             axios.post(`${backendUrl}/api/users/${username}/add_solved_problem/`, { problem_id: 1 })
               .then(response => {
                 console.log('Problem solved and submitted:', response.data);
@@ -178,6 +174,7 @@ const App = () => {
                 console.error('There was an error submitting the solved problem:', error);
               });
           } else{
+
             alert('아님');
           }
         } else if (id == 2) {
@@ -210,8 +207,8 @@ const App = () => {
           }
         } else if (id == 4) {
           const isHexagonFormed = isHexagon(lines);
-          
-          if(isHexagonFormed) {
+
+          if (isHexagonFormed) {
             alert('육각형임');
             axios.post(`${backendUrl}/api/users/${username}/add_solved_problem/`, { problem_id: 4 })
               .then(response => {
@@ -224,7 +221,7 @@ const App = () => {
             alert('육각형 아님');
           }
         } else {
-          
+
         }
       } else {
         console.log('Submission canceled');
@@ -239,7 +236,7 @@ const App = () => {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/dashboard" element={<PrivateRoute element={<DashboardPage />} />} />
+        <Route path="/dashboard" element={<PrivateRoute element={<DashboardPage username={username} />} />} />
         <Route path="/webglcanvas/:id" element={<PrivateRoute element={<WebGLCanvas isLineMode={isLineMode} isEraserMode={isEraserMode} isCircleMode={isCircleMode} />} />} />
         <Route path="/" element={<Navigate to="/dashboard" />} />
       </Routes>
