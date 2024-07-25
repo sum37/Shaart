@@ -10,6 +10,7 @@ import { ReactComponent as LineIcon } from './assets/line.svg';
 import { ReactComponent as CircleIcon } from './assets/circle.svg';
 import { BiSolidEraser, BiCheck } from "react-icons/bi";
 
+
 const PrivateRoute = ({ element }) => {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? element : <Navigate to="/login" />;
