@@ -33,9 +33,9 @@ const DashboardPage = () => {
         </button>
       </header>
       <header className="dashboard-header">
-        <div className="image-container">
+        {/* <div className="image-container">
           <img src={mathimg} alt="Main Visual" />
-        </div>
+        </div> */}
         <h1>시작하세요, 작도</h1>
         <p>차례차례 문제를 풀어보세요. 귀하의 공간지각능력을 키워보세요 😊</p>
       </header>
