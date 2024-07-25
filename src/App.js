@@ -16,8 +16,27 @@ const PrivateRoute = ({ element }) => {
 };
 
 const distance = (x1, y1, x2, y2) => {
-  return parseFloat(Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2)).toFixed(4));
+  return parseFloat(Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2)).toFixed(2));
 };
+
+const angle = (x1, y1, x2, y2, x3, y3, x4, y4) => {
+  const dotProduct = (a, b) => a[0] * b[0] + a[1] * b[1];
+  const magnitude = (v) => Math.sqrt(v[0] * v[0] + v[1] * v[1]);
+
+  const v1 = [x2 - x1, y2 - y1];
+  const v2 = [x4 - x3, y4 - y3];
+
+  const dotProd = dotProduct(v1, v2);
+  const mag1 = magnitude(v1);
+  const mag2 = magnitude(v2);
+
+  const cosTheta = dotProd / (mag1 * mag2);
+  const angleRad = Math.acos(cosTheta);
+  const angleDeg = angleRad * (180 / Math.PI);
+
+  return angleDeg.toFixed(0);
+};
+
 
 const isTriangle = (lines) => {
   if(lines.length !== 12) return false;
@@ -32,6 +51,63 @@ const isTriangle = (lines) => {
 
   return false;
 };
+
+const isBisector = (lines) => {
+  if (lines.length !== 12) return false;
+
+  const angle1 = angle(lines[0], lines[1], lines[2], lines[3], lines[4], lines[5], lines[6], lines[7]);
+  const angle2 = angle(lines[4], lines[5], lines[6], lines[7], lines[8], lines[9], lines[10], lines[11]);
+  const angle3 = angle(lines[0], lines[1], lines[2], lines[3], lines[8], lines[9], lines[10], lines[11]);
+
+  console.log(angle1, angle2, angle3);
+
+  const maxAngle = Math.max(angle1, angle2, angle3);
+
+  let otherAnglesSum;
+  if (maxAngle === angle1) {
+    return Math.floor(2 * angle2) === Math.floor(angle1) && Math.floor(2 * angle3) === Math.floor(angle1);
+  } else if (maxAngle === angle2) {
+    return Math.floor(2 * angle1) === Math.floor(angle2) && Math.floor(2 * angle3) === Math.floor(angle2);
+  } else {
+    return Math.floor(2 * angle2) === Math.floor(angle3) && Math.floor(2 * angle1) === Math.floor(angle3);
+  }
+};
+
+const isPerpendicular = (lines) => {
+  if (lines.length !== 8) return false;
+  const angle1 = angle(lines[0], lines[1], lines[2], lines[3], lines[4], lines[5], lines[6], lines[7]);
+  
+  if(angle1 == 90) return true;
+  return false;
+  
+}
+
+const isHexagon = (lines) => {
+  if (lines.length !== 28) return false;
+  const line1 = distance(lines[24], lines[25], lines[26], lines[27]);
+  const line2 = distance(lines[4], lines[5], lines[6], lines[7]);
+  const line3 = distance(lines[8], lines[9], lines[10], lines[11]);
+  const line4 = distance(lines[12], lines[13], lines[14], lines[15]);
+  const line5 = distance(lines[16], lines[17], lines[18], lines[19]);
+  const line6 = distance(lines[20], lines[21], lines[22], lines[23]);
+
+
+  const angle1 = angle(lines[24], lines[25], lines[26], lines[27], lines[4], lines[5], lines[6], lines[7]);
+  const angle2 = angle(lines[4], lines[5], lines[6], lines[7], lines[8], lines[9], lines[10], lines[11]);
+  const angle3 = angle(lines[8], lines[9], lines[10], lines[11], lines[12], lines[13], lines[14], lines[15]);
+  const angle4 = angle(lines[12], lines[13], lines[14], lines[15], lines[16], lines[17], lines[18], lines[19]);
+  const angle5 = angle(lines[16], lines[17], lines[18], lines[19], lines[20], lines[21], lines[22], lines[23]);
+  const angle6 = angle(lines[20], lines[21], lines[22], lines[23], lines[24], lines[25], lines[26], lines[27]);
+ 
+
+  console.log(line1, line2, line3, line4, line5, line6);
+  console.log(angle1, angle2, angle3, angle4, angle5, angle6);
+
+  const equalSixLine = (line1 == line2) && (line1 == line3) && (line1 == line4) && (line1 == line5) && (line1 == line6)
+  const equalSixAngle = true;
+
+  return equalSixLine && equalSixAngle
+}
 
 const App = () => {
   const [isEraserMode, setEraserMode] = useState(false);
@@ -54,17 +130,17 @@ const App = () => {
       setEraserMode(true);
       setCircleMode(false);
       setLineMode(false);
-      setActiveButton((prevMode) => (prevMode === 'Eraser' ? '' : 'Eraser'));
+      setActiveButton('Eraser');
     } else if (action === 'Circle') {
       setCircleMode(true);
       setEraserMode(false);
       setLineMode(false);
-      setActiveButton((prevMode) => (prevMode === 'Circle' ? '' : 'Circle'));
+      setActiveButton('Circle');
     } else if (action === 'Line') {
       setLineMode(true);
       setEraserMode(false);
       setCircleMode(false);
-      setActiveButton((prevMode) => (prevMode === 'Line' ? '' : 'Line'));
+      setActiveButton('Line');
     } else if (action === 'Submit') {
       const confirmed = window.confirm('제출하시겠습니까?');
       if (confirmed) {
@@ -75,27 +151,51 @@ const App = () => {
         const points = WebGLCanvasRefs.pointsRef;
         const lines = WebGLCanvasRefs.linesRef;
         const circles = WebGLCanvasRefs.circlesRef;
+        const id = WebGLCanvasRefs.id;
 
         // Print the points, lines, and circles to the console
         console.log('Points:', points);
         console.log('Lines:', lines);
         console.log('Circles:', circles);
+        console.log('id: ', id);
 
         // Check if the points form a triangle
-        const isTriangleFormed = isTriangle(lines);
-        if (isTriangleFormed) {
-          alert('The shapes form a triangle.');
+        if (id == 1) {
+          const isPerpendicularFormed = isPerpendicular(lines);
+          if(isPerpendicularFormed) {
+            alert('수직임');
+          } else{
+            alert('아님');
+          }
+        } else if (id == 2) {
+          const isBisectorFormed = isBisector(lines);
+          if (isBisectorFormed) {
+            alert('이등분함');
+          } else {
+            alert('이등분안함');
+          }
+        } else if (id == 3) {
+          const isTriangleFormed = isTriangle(lines);
+          if (isTriangleFormed) {
+            alert('The shapes form a triangle.');
+          } else {
+            alert('The shapes do not form a triangle.');
+          }
+        } else if (id == 4) {
+          const isHexagonFormed = isHexagon(lines);
+          
+          if(isHexagonFormed) {
+            alert('육각형임');
+          } else {
+            alert('육각형 아님');
+          }
         } else {
-          alert('The shapes do not form a triangle.');
+          
         }
+    
+        
 
-        // 각의 이등분선
-        // const isBisector = isBisector(lines);
-        // if (isBisector) {
-        //   alert('이등분함');
-        // } else {
-        //   alert('이등분안함');
-        // }
+      
       } else {
         console.log('Submission canceled');
       }
