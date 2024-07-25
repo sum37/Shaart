@@ -45,3 +45,22 @@
 .price {
   color: #00aaff; /* Adjust color as needed */
 }
+
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.status {
+  font-weight: bold;
+}
+
+.status.solved {
+  color: #ADD8E6; /* Light blue */
+}
+
+.status.unsolved {
+  color: #FFA07A; /* Light red */
+}
