@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Route, Routes, Navigate } from 'react-router-dom';
+import { Route, Routes, Navigate, useNavigate } from 'react-router-dom';
 import WebGLCanvas, { WebGLCanvasRefs } from './WebGLCanvas';
 import LoginPage from './LoginPage';
 import RegisterPage from './RegisterPage';
@@ -65,20 +65,28 @@ const isBisector = (lines) => {
 
   const maxAngle = Math.max(angle1, angle2, angle3);
 
-  if (maxAngle === angle1) {
-    return Math.floor(2 * angle2) === Math.floor(angle1) && Math.floor(2 * angle3) === Math.floor(angle1);
-  } else if (maxAngle === angle2) {
-    return Math.floor(2 * angle1) === Math.floor(angle2) && Math.floor(2 * angle3) === Math.floor(angle2);
+  console.log(maxAngle);
+
+  
+
+  if (maxAngle == angle1) {
+    console.log("wowooi")
+    return (Math.floor(angle2) == Math.floor(angle3))||(Math.abs(angle2 - angle3) == 1);
+  } else if (maxAngle == angle2) {
+    return (Math.floor(2 * angle1) === Math.floor(angle2) && Math.floor(2 * angle3) === Math.floor(angle2)) ||
+         (Math.abs(angle1 - angle3) === 1);
   } else {
-    return Math.floor(2 * angle2) === Math.floor(angle3) && Math.floor(2 * angle1) === Math.floor(angle3);
+    return (Math.floor(2 * angle2) === Math.floor(angle3) && Math.floor(2 * angle1) === Math.floor(angle3)) ||
+         (Math.abs(angle2 - angle1) === 1);
   }
+  
 };
 
 const isPerpendicular = (lines) => {
   if (lines.length !== 8) return false;
   const angle1 = angle(lines[0], lines[1], lines[2], lines[3], lines[4], lines[5], lines[6], lines[7]);
 
-  return angle1 === 90;
+  return angle1 == 90;
 };
 
 const isHexagon = (lines) => {
@@ -100,7 +108,7 @@ const isHexagon = (lines) => {
   console.log(line1, line2, line3, line4, line5, line6);
   console.log(angle1, angle2, angle3, angle4, angle5, angle6);
 
-  const equalSixLine = (line1 === line2) && (line1 === line3) && (line1 === line4) && (line1 === line5) && (line1 === line6);
+  const equalSixLine = (line1 == line2) && (line1 == line3) && (line1 == line4) && (line1 == line5) && (line1 == line6);
   const equalSixAngle = true;
 
   return equalSixLine && equalSixAngle;
@@ -112,6 +120,7 @@ const App = () => {
   const [isLineMode, setLineMode] = useState(false);
   const [activeButton, setActiveButton] = useState('');
   const [username, setUsername] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const storedUsername = localStorage.getItem('username');
@@ -144,18 +153,10 @@ const App = () => {
         console.log('Submission confirmed');
 
         // Retrieve points, lines, and circles
-        const points = WebGLCanvasRefs.pointsRef;
         const lines = WebGLCanvasRefs.linesRef;
-        const circles = WebGLCanvasRefs.circlesRef;
         const id = WebGLCanvasRefs.id;
-        // Print the points, lines, and circles to the console
-        console.log('Points:', points);
-        console.log('Lines:', lines);
-        console.log('Circles:', circles);
-        console.log('id: ', id);
 
-        // Check if the points form a triangle
-        if (id === 1) {
+        if (id == 1) {
           const isPerpendicularFormed = isPerpendicular(lines);
           if (isPerpendicularFormed) {
             alert('정답입니다!');
@@ -170,7 +171,8 @@ const App = () => {
           } else {
             alert('오답입니다!');
           }
-        } else if (id === 2) {
+        } else if (id == 2) {
+          console.log("hihi");
           const isBisectorFormed = isBisector(lines);
           if (isBisectorFormed) {
             alert('정답입니다!');
@@ -184,7 +186,7 @@ const App = () => {
           } else {
             alert('오답입니다!');
           }
-        } else if (id === 3) {
+        } else if (id == 3) {
           const isTriangleFormed = isTriangle(lines);
           if (isTriangleFormed) {
             alert('정답입니다!');
@@ -198,7 +200,7 @@ const App = () => {
           } else {
             alert('오답입니다!');
           }
-        } else if (id === 4) {
+        } else if (id == 4) {
           const isHexagonFormed = isHexagon(lines);
 
           if (isHexagonFormed) {
