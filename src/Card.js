@@ -29,7 +29,7 @@ const Card = ({ id, image, title, description, footerLeft, onClick, username }) 
       <p className="card-footer">
         <span>{footerLeft}</span>
         <span className={`status ${status ? 'solved' : 'unsolved'}`}>
-          {status ? '해결' : '미해결'}
+          {status ? '해결' : ''}
         </span>
       </p>
     </div>
