@@ -9,6 +9,9 @@ import './App.css';
 import { ReactComponent as LineIcon } from './assets/line.svg';
 import { ReactComponent as CircleIcon } from './assets/circle.svg';
 import { BiSolidEraser, BiCheck } from "react-icons/bi";
+import axios from 'axios';
+
+const backendUrl = process.env.REACT_APP_BACKEND_URL;
 
 
 const PrivateRoute = ({ element }) => {
@@ -110,6 +113,8 @@ const isHexagon = (lines) => {
   return equalSixLine && equalSixAngle;
 };
 
+
+
 const App = () => {
   const [isEraserMode, setEraserMode] = useState(false);
   const [isCircleMode, setCircleMode] = useState(false);
@@ -168,7 +173,6 @@ const App = () => {
         const lines = WebGLCanvasRefs.linesRef;
         const circles = WebGLCanvasRefs.circlesRef;
         const id = WebGLCanvasRefs.id;
-
         // Print the points, lines, and circles to the console
         console.log('Points:', points);
         console.log('Lines:', lines);
@@ -179,31 +183,60 @@ const App = () => {
         if (id == 1) {
           const isPerpendicularFormed = isPerpendicular(lines);
           if (isPerpendicularFormed) {
-            alert('수직임');
+            alert('정답입니다!');
+
+            axios.post(`${backendUrl}/api/users/${username}/add_solved_problem/`, { problem_id: 1 })
+              .then(response => {
+                console.log('Problem solved and submitted:', response.data);
+              })
+              .catch(error => {
+                console.error('There was an error submitting the solved problem:', error);
+              });
           } else {
-            alert('아님');
+            alert('오답입니다!');
           }
         } else if (id == 2) {
           const isBisectorFormed = isBisector(lines);
           if (isBisectorFormed) {
-            alert('이등분함');
+            alert('정답입니다!');
+            axios.post(`${backendUrl}/api/users/${username}/add_solved_problem/`, { problem_id: 2 })
+              .then(response => {
+                console.log('Problem solved and submitted:', response.data);
+              })
+              .catch(error => {
+                console.error('There was an error submitting the solved problem:', error);
+              });
           } else {
-            alert('이등분안함');
+            alert('오답입니다!');
           }
         } else if (id == 3) {
           const isTriangleFormed = isTriangle(lines);
           if (isTriangleFormed) {
-            alert('The shapes form a triangle.');
+            alert('정답입니다!');
+            axios.post(`${backendUrl}/api/users/${username}/add_solved_problem/`, { problem_id: 3 })
+              .then(response => {
+                console.log('Problem solved and submitted:', response.data);
+              })
+              .catch(error => {
+                console.error('There was an error submitting the solved problem:', error);
+              });
           } else {
-            alert('The shapes do not form a triangle.');
+            alert('오답입니다!');
           }
         } else if (id == 4) {
           const isHexagonFormed = isHexagon(lines);
 
           if (isHexagonFormed) {
-            alert('육각형임');
+            alert('정답입니다!');
+            axios.post(`${backendUrl}/api/users/${username}/add_solved_problem/`, { problem_id: 4 })
+              .then(response => {
+                console.log('Problem solved and submitted:', response.data);
+              })
+              .catch(error => {
+                console.error('There was an error submitting the solved problem:', error);
+              });
           } else {
-            alert('육각형 아님');
+            alert('오답입니다!');
           }
         } else {
           // Add additional shape checks here
