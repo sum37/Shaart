@@ -9,7 +9,6 @@ import myimg from './assets/su.png';
 import triangle from './assets/triangle.png';
 import seven from './assets/seven.png';
 import two__angle from './assets/angle_two.png';
-import mathimg from './math.png';
 
 const DashboardPage = ({ username }) => {
   const navigate = useNavigate();
