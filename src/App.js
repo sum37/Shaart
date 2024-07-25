@@ -106,7 +106,6 @@ const App = () => {
 
   return (
     <div className="App">
-      <div className="username-display">Welcome, {username}!</div> {/* Display the username */}
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
